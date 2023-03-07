@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.32916.344
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WordPressMigrationTool", "WordPressMigrationTool.csproj", "{D819B45D-1D49-47C4-92F1-07AE9D72E532}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D819B45D-1D49-47C4-92F1-07AE9D72E532}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D819B45D-1D49-47C4-92F1-07AE9D72E532}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D819B45D-1D49-47C4-92F1-07AE9D72E532}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D819B45D-1D49-47C4-92F1-07AE9D72E532}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E4FE9526-EE92-46F5-B1C0-75D616200001}
+	EndGlobalSection
+EndGlobal
