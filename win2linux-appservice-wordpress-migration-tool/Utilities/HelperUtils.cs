@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Renci.SshNet.Sftp;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -47,8 +48,8 @@ namespace WordPressMigrationTool.Utilities
                 return null;
             }
 
-            string mysqlConnectionString = "server=" + serverHostName + ";user=" + username + ";pwd="
-                + password + ";database=" + databaseName + ";convertzerodatetime=true;";
+            string mysqlConnectionString = "server=" + serverHostName + ";user=" + username + ";pwd='"
+                + password + "';database=" + databaseName + ";convertzerodatetime=true;";
             if (!string.IsNullOrWhiteSpace(charset))
             {
                 return mysqlConnectionString + "charset=" + charset + ";";
