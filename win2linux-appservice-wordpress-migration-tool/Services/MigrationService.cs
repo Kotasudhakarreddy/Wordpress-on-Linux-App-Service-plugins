@@ -19,7 +19,8 @@ namespace WordPressMigrationTool
         private DefaultAzureCredential _azureCredential;
         private bool _retainWpFeatures;
 
-        public MigrationService(SiteInfo sourceSiteInfo, SiteInfo destinationSiteInfo, RichTextBox? progressViewRTextBox, string[] previousMigrationStatus, MigrationUX migrationUxForm, bool retainWpFeatures) { 
+        public MigrationService(SiteInfo sourceSiteInfo, SiteInfo destinationSiteInfo, RichTextBox? progressViewRTextBox, string[] previousMigrationStatus, MigrationUX migrationUxForm, bool retainWpFeatures)
+        {
             this._sourceSiteInfo = sourceSiteInfo;
             this._destinationSiteInfo = destinationSiteInfo;
             this._progressViewRTextBox = progressViewRTextBox;
@@ -67,7 +68,7 @@ namespace WordPressMigrationTool
                 {
                     return exporttRes;
                 }
-                
+
                 Result importRes = importService.ImportDataToDestinationSite(this._destinationSiteInfo, this._sourceSiteInfo.databaseName);
                 if (importRes.status == Status.Failed || importRes.status == Status.Cancelled)
                 {
@@ -86,7 +87,8 @@ namespace WordPressMigrationTool
 
                 return new Result(Status.Completed, Constants.SUCCESS_MESSAGE);
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 return new Result(Status.Failed, ex.Message);
             }
         }
@@ -100,8 +102,14 @@ namespace WordPressMigrationTool
             try
             {
                 PublishingUserData publishingProfile = AzureManagementUtils.GetPublishingCredentialsForAppService(webAppResource);
+
                 string databaseConnectionString = AzureManagementUtils.GetDatabaseConnectionString(webAppResource);
-                HelperUtils.ParseAndUpdateDatabaseConnectionStringForWinAppService(this._sourceSiteInfo, databaseConnectionString);
+                Result dbParseResult = HelperUtils.ParseAndUpdateDatabaseConnectionStringForWinAppService(this._sourceSiteInfo, databaseConnectionString);
+                if (dbParseResult.status == Status.Failed || dbParseResult.status == Status.Cancelled)
+                {
+                    return dbParseResult;
+                }
+
                 this._sourceSiteInfo.ftpUsername = publishingProfile.PublishingUserName;
                 this._sourceSiteInfo.ftpPassword = publishingProfile.PublishingPassword;
                 this._sourceSiteInfo.stackVersion = webAppResource.Data.SiteConfig.PhpVersion;
@@ -138,7 +146,7 @@ namespace WordPressMigrationTool
             }
 
             try
-            { 
+            {
                 PublishingUserData publishingProfile = AzureManagementUtils.GetPublishingCredentialsForAppService(webAppResource);
 
                 this._destinationSiteInfo.ftpUsername = publishingProfile.PublishingUserName;
@@ -193,8 +201,8 @@ namespace WordPressMigrationTool
                 HelperUtils.WriteOutputWithNewLine(res.message, this._progressViewRTextBox);
 
                 // logs Migration status
-                string logMessage = String.Format("({0}; {1}; {2}; {3}; {4}; {5}; {6}; {7})", (res.status == Status.Completed ? "MIGRATION_SUCCESSFUL" : "MIGRATION_FAILED"), 
-                    this._sourceSiteInfo.webAppName, this._sourceSiteInfo.subscriptionId, this._sourceSiteInfo.resourceGroupName, this._destinationSiteInfo.webAppName, 
+                string logMessage = String.Format("({0}; {1}; {2}; {3}; {4}; {5}; {6}; {7})", (res.status == Status.Completed ? "MIGRATION_SUCCESSFUL" : "MIGRATION_FAILED"),
+                    this._sourceSiteInfo.webAppName, this._sourceSiteInfo.subscriptionId, this._sourceSiteInfo.resourceGroupName, this._destinationSiteInfo.webAppName,
                     this._destinationSiteInfo.subscriptionId, this._destinationSiteInfo.resourceGroupName, res.message);
                 this.LogMigrationStatusMessage(logMessage);
 

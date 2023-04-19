@@ -1,7 +1,10 @@
 ﻿using Newtonsoft.Json;
+using Renci.SshNet.Sftp;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace WordPressMigrationTool.Utilities
 {
@@ -36,17 +39,17 @@ namespace WordPressMigrationTool.Utilities
             return null;
         }
 
-        public static string GetMySQLConnectionStringForExternalMySQLClientTool(string serverHostName, 
+        public static string GetMySQLConnectionStringForExternalMySQLClientTool(string serverHostName,
             string username, string password, string databaseName, string? charset)
         {
-            if (string.IsNullOrWhiteSpace(serverHostName) || string.IsNullOrWhiteSpace(username) 
+            if (string.IsNullOrWhiteSpace(serverHostName) || string.IsNullOrWhiteSpace(username)
                 || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(databaseName))
             {
                 return null;
             }
 
-            string mysqlConnectionString = "server=" + serverHostName + ";user=" + username + ";pwd="
-                + password + ";database=" + databaseName + ";convertzerodatetime=true;";
+            string mysqlConnectionString = "server=" + serverHostName + ";user=" + username + ";pwd='"
+                + password + "';database=" + databaseName + ";convertzerodatetime=true;";
             if (!string.IsNullOrWhiteSpace(charset))
             {
                 return mysqlConnectionString + "charset=" + charset + ";";
@@ -56,30 +59,45 @@ namespace WordPressMigrationTool.Utilities
         }
 
         // Parses Database connection string of windows app service to get DB info (hostname, username, password and database name)
-        public static void ParseAndUpdateDatabaseConnectionStringForWinAppService(SiteInfo sourceSite, string databaseConnectionString)
+        public static Result ParseAndUpdateDatabaseConnectionStringForWinAppService(SiteInfo sourceSite, string databaseConnectionString)
         {
-            string[] splits = databaseConnectionString.Split(';');
+            sourceSite.databaseName = GetValueFromDbConnectionString("Database", databaseConnectionString);
+            sourceSite.databaseHostname = GetValueFromDbConnectionString("Data Source", databaseConnectionString);
+            sourceSite.databaseUsername = GetValueFromDbConnectionString("User Id", databaseConnectionString);
+            sourceSite.databasePassword = GetValueFromDbConnectionString("Password", databaseConnectionString);
 
-            foreach (string record in splits)
+            if (String.IsNullOrEmpty(sourceSite.databaseName) || String.IsNullOrEmpty(sourceSite.databaseHostname) || String.IsNullOrEmpty(sourceSite.databaseUsername) || String.IsNullOrEmpty(sourceSite.databasePassword))
             {
-                string value = record.Substring(record.IndexOf("=") + 1);
-                if (record.StartsWith("Database"))
+                return new Result(Status.Failed, "Couldn't retrieve database credentials from the Database connection string");
+            }
+            return new Result(Status.Completed, "");
+        }
+
+        private static string GetValueFromDbConnectionString(string key, string inputString)
+        {
+            // DB connection string regular expression
+            var pattern = @"(.+)=(.+);(.+)=(.+);(.+)=(.+);(.+)=(.+)";
+            var match = Regex.Match(inputString, pattern, RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                if (match.Groups[1].Value.Contains(key))
                 {
-                    sourceSite.databaseName = value;
+                    return match.Groups[2].Value;
                 }
-                else if (record.StartsWith("Data Source"))
+                else if (match.Groups[3].Value.Contains(key))
                 {
-                    sourceSite.databaseHostname = value;
+                    return match.Groups[4].Value;
                 }
-                else if (record.StartsWith("User Id"))
+                else if (match.Groups[5].Value.Contains(key))
                 {
-                    sourceSite.databaseUsername = value;
+                    return match.Groups[6].Value;
                 }
-                else if (record.StartsWith("Password"))
+                else
                 {
-                    sourceSite.databasePassword = value;
+                    return match.Groups[8].Value;
                 }
             }
+            return "";
         }
 
         // Deletes given input file on local machine
@@ -96,7 +114,7 @@ namespace WordPressMigrationTool.Utilities
         {
             if (richTextBox != null)
             {
-                richTextBox.Invoke(richTextBox.AppendText, message+"\n");                 
+                richTextBox.Invoke(richTextBox.AppendText, message + "\n");
             }
 
             Console.WriteLine(message);
@@ -130,7 +148,7 @@ namespace WordPressMigrationTool.Utilities
                 richTextBox.Invoke(new Action(() =>
                 {
                     string currText = richTextBox.Text;
-                    richTextBox.Select(currText.LastIndexOf("\n")+1, (currText.Length - currText.LastIndexOf("\n") + 1));
+                    richTextBox.Select(currText.LastIndexOf("\n") + 1, (currText.Length - currText.LastIndexOf("\n") + 1));
                     richTextBox.Cut();
                     richTextBox.AppendText(message);
                 }));
@@ -161,7 +179,7 @@ namespace WordPressMigrationTool.Utilities
                         var jsonString = JsonConvert.SerializeObject(new { command = command, dir = "" });
                         HttpContent httpContent = new StringContent(jsonString);
                         httpContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-                        
+
                         // Embed Status message into UserAgent field
                         if (!String.IsNullOrEmpty(message))
                         {
@@ -189,7 +207,8 @@ namespace WordPressMigrationTool.Utilities
                             return new KuduCommandApiResult(Status.Completed, responseData.Output, responseData.Error, responseData.ExitCode);
                         }
                     }
-                    catch (Exception ex) {
+                    catch (Exception ex)
+                    {
                         return new KuduCommandApiResult(Status.Failed, ex.Message);
                     }
 
@@ -211,7 +230,7 @@ namespace WordPressMigrationTool.Utilities
         public static Result ClearAppServiceDirectory(string targetFolder, string ftpUsername, string ftpPassword, string appServiceName, int maxRetryCount = Constants.MAX_APP_CLEAR_DIR_RETRIES)
         {
             Status result = Status.Failed;
-            string message = "Unable to clear " + targetFolder 
+            string message = "Unable to clear " + targetFolder
                 + " directory on " + appServiceName + " App Service.";
 
             if (maxRetryCount <= 0)
@@ -233,7 +252,7 @@ namespace WordPressMigrationTool.Utilities
                     if (checkTargetDirEmptyResult.exitCode == 0 && String.IsNullOrEmpty(checkTargetDirEmptyResult.output))
                     {
                         result = Status.Completed;
-                        message = "Successfully cleared " + targetFolder 
+                        message = "Successfully cleared " + targetFolder
                             + " directory on " + appServiceName + " App Service.";
                         break;
                     }
@@ -241,7 +260,8 @@ namespace WordPressMigrationTool.Utilities
                     ExecuteKuduCommandApi(clearTargetDirCommand, ftpUsername, ftpPassword, appServiceName, Constants.MAX_APP_CLEAR_DIR_RETRIES, timeout: Constants.KUDU_API_TIMEOUT_SECONDS_LARGE);
                     ExecuteKuduCommandApi(createTargetDirCommand, ftpUsername, ftpPassword, appServiceName, Constants.MAX_RETRIES_COMMON);
                 }
-                catch (Exception e) {
+                catch (Exception e)
+                {
                     result = Status.Failed;
                     message = "Unable to clear " + targetFolder + " directory "
                         + "on " + appServiceName + " App Service. Error=" + e.Message;
@@ -272,7 +292,7 @@ namespace WordPressMigrationTool.Utilities
                         content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
 
                         var byteArray = Encoding.ASCII.GetBytes(ftpUsername + ":" + ftpPassword);
-                        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", 
+                        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic",
                             Convert.ToBase64String(byteArray));
 
                         HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Put, kuduUploadUrl);
@@ -282,14 +302,15 @@ namespace WordPressMigrationTool.Utilities
                         if (response.IsSuccessStatusCode)
                         {
                             result = Status.Completed;
-                            message = "Sucessfully uploaded " + zipFilePath 
+                            message = "Sucessfully uploaded " + zipFilePath
                                 + " to Linux App Service.";
                             break;
                         }
                     }
-                    catch (Exception e) {
+                    catch (Exception e)
+                    {
                         result = Status.Failed;
-                        message = "Unable to upload " + zipFilePath 
+                        message = "Unable to upload " + zipFilePath
                             + " to Linux App Service. Error=" + e.Message;
                     }
 
@@ -308,7 +329,7 @@ namespace WordPressMigrationTool.Utilities
             return new Result(result, message);
         }
 
-        public static List<string> GetDefaultDropdownList (string displayMsg)
+        public static List<string> GetDefaultDropdownList(string displayMsg)
         {
             return new List<string>() { displayMsg };
         }
