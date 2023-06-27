@@ -192,145 +192,74 @@ class Azure_app_service_migration_Admin
                 $dontexptmustuseplugs = $_REQUEST['hiddendontexptmustuseplugs'];
                 $dontexptplugins = $_REQUEST['hiddendontexptplugins'];
                 $dontdbsql = $_REQUEST['hiddendbsql'];
-                $selectedCheckboxes = [];
-                if (!empty($confpassword)) {
-                    $selectedCheckboxes[] = 'hiddenconfpassword';
-                }
-                if ($dontexptpostrevisions) {
-                    $selectedCheckboxes[] = 'hiddendontexptpostrevisions';
-                }
+                $excludedFolders = [];
+
                 if ($dontexptsmedialibrary) {
-                    $selectedCheckboxes[] = 'hiddendontexptsmedialibrary';
+                    $excludedFolders[] = 'uploads';
                 }
                 if ($dontexptsthems) {
-                    $selectedCheckboxes[] = 'hiddendontexptsthems';
+                    $excludedFolders[] = 'themes';
                 }
                 if ($dontexptmustuseplugs) {
-                    $selectedCheckboxes[] = 'hiddendontexptmustuseplugs';
+                    $excludedFolders[] = 'mu-plugins';
                 }
                 if ($dontexptplugins) {
-                    $selectedCheckboxes[] = 'hiddendontexptplugins';
+                    $excludedFolders[] = 'plugins';
                 }
-                if ($dontdbsql) {
-                    $selectedCheckboxes[] = 'hiddendbsql';
-                }
+
+                $File_Name = $_SERVER['HTTP_HOST'];
+                $datetime = date('Y-m-d_H-i-s');
                 // Folder Empty Zip files
                 $wp_root_path = get_home_path();
+
                 // bkupcontent directory path
-                $directoryPath = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/';
-                // Zip files directory path
-                $ZipFiledirectoryPath = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/zipfiles/';
-                // Database directory path
-                $DBFiledirectoryPath = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/backupdb/';
-                function deleteDirectory($dirPath)
-                {
-                    if (!is_dir($dirPath)) {
-                        return;
-                    }
-                    $files = scandir($dirPath);
-                    foreach ($files as $file) {
-                        if ($file === '.' || $file === '..') {
-                            continue;
-                        }
-                        $filePath = $dirPath . '/' . $file;
-                        if (is_file($filePath)) {
-                            if (unlink($filePath)) {
-                                // echo 'File deleted: ' . $filePath . '<br>';
-                            } else {
-                                // echo 'Failed to delete the file: ' . $filePath . '<br>';
-                            }
-                        } elseif (is_dir($filePath)) {
-                            deleteDirectory($filePath);
-                            if (rmdir($filePath)) {
-                                // echo 'Folder deleted: ' . $filePath . '<br>';
-                            } else {
-                                // echo 'Failed to delete the folder: ' . $filePath . '<br>';
-                            }
-                        }
+                $zipFilePath = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/' . $File_Name . '_' . $datetime . '.zip';
+                $folderPath = $wp_root_path . '/wp-content/';
+                $zipFileName = $File_Name . '_' . $datetime . '.zip';
+
+                $iterator = new DirectoryIterator($wp_root_path . '/wp-content/plugins/azure_app_service_migration/');
+
+                foreach ($iterator as $file) {
+                    if ($file->isFile() && strpos($file->getFilename(), $File_Name . '_') === 0 && pathinfo($file->getFilename(), PATHINFO_EXTENSION) === 'zip') {
+                        $filePath = $file->getPathname();
+                        unlink($filePath);
                     }
                 }
-                // Call the deleteDirectory function to delete all folders and files within the directory
-                deleteDirectory($directoryPath);
-                deleteDirectory($ZipFiledirectoryPath);
-                // Skips the DB exports if the user wants to skip
-                if (!$dontdbsql) {
-                    // Create Dynamic folder
-                    // The desired directory path
-                    $directory = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/';
-                    // The dynamically generated folder name
-                    $folderName = 'backupdb';
-                    $targetDirectory = $directory . $folderName;
-                    if (!is_dir($targetDirectory)) {
-                        // Create the directory if it doesn't already exist
-                        if (mkdir($targetDirectory, 0777, true)) {
-                            //echo "Folder created successfully.";
-                        } else {
-                            //echo "Failed to create the folder.";
-                        }
-                    } else {
-                        //echo "Folder already exists.";
-                    }
-                    // The database file will be exported
-                    // Get the list of tables
-                    global $wpdb;
-                    $tablesQuery = "SHOW TABLES";
-                    $tables = $wpdb->get_results($tablesQuery, ARRAY_N);
-                    // Specify the folder path
-                    $folderPath = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/backupdb/';
-                    // Create the folder if it doesn't exist
-                    if (!is_dir($folderPath)) {
-                        mkdir($folderPath, 0777, true);
-                    }
-                    // Loop through the tables
-                    foreach ($tables as $table) {
-                        $tableName = $table[0];
-                        // Export table structure
-                        $structureQuery = "SHOW CREATE TABLE {$tableName}";
-                        $structureResult = $wpdb->get_row($structureQuery, ARRAY_N);
-                        $tableStructure = $structureResult[1];
-                        // Write table structure to a file
-                        $structureFilename = "{$tableName}_structure.sql";
-                        file_put_contents($folderPath . $structureFilename, $tableStructure);
-                        // Export table records in batches
-                        // Number of rows to export per batch
-                        $batchSize = 1000; 
-                        $offset = 0;
-                        $batchNumber = 1;
-                        // Track if a batch fails
-                        $failedBatch = false; 
-                        do {
-                            if ($dontexptpostrevisions && $tableName == 'wp_posts') {
-                                $recordsQuery = "SELECT * FROM {$tableName} WHERE post_type != 'revision' LIMIT {$offset}, {$batchSize}";
-                            } else {
-                                $recordsQuery = "SELECT * FROM {$tableName} LIMIT {$offset}, {$batchSize}";
-                            }
-                            $records = $wpdb->get_results($recordsQuery, ARRAY_A);
-                            // Write records to a file
-                            $recordsFilename = "{$tableName}_records_batch{$batchNumber}.sql";
-                            if (!empty($records)) {
-                                $recordsContent = "";
-                                foreach ($records as $record) {
-                                    $recordValues = array_map(function ($value) {
-                                        return "'" . addslashes($value) . "'";
-                                    }, $record);
-                                    $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");\n";
-                                }
-                                // Write records content to a file
-                                if (!file_put_contents($folderPath . $recordsFilename, $recordsContent)) {
-                                    $failedBatch = true; // Mark the batch as failed
-                                    break; // Exit the loop if failed to write the file
-                                }
-                            }
-                            // Increment the offset and batch number
-                            $offset += $batchSize;
-                            $batchNumber++;
-                        } while (!empty($records));
-                        // Check if a batch failed and re-run the code
-                        while ($failedBatch) {
-                            // Reset the failed batch flag
-                            $failedBatch = false; 
-                            // Add additional actions or logging if required
-                            // Continue from the last failed batch
+
+                $zip = new ZipArchive();
+                if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+
+                    $wpContentFolderNameInZip = 'wp-content/';
+                    $zip->addEmptyDir($wpContentFolderNameInZip);
+
+                    // Skips the DB exports if the user wants to skip
+                    if (!$dontdbsql) {
+
+                        $wpDBFolderNameInZip = 'wp-database/';
+                        $zip->addEmptyDir($wpDBFolderNameInZip);
+
+                        // The database file will be exported
+                        // Get the list of tables
+                        global $wpdb;
+                        $tablesQuery = "SHOW TABLES";
+                        $tables = $wpdb->get_results($tablesQuery, ARRAY_N);
+                        // Loop through the tables
+
+                        foreach ($tables as $table) {
+                            $tableName = $table[0];
+                            // Export table structure
+                            $structureQuery = "SHOW CREATE TABLE {$tableName}";
+                            $structureResult = $wpdb->get_row($structureQuery, ARRAY_N);
+                            $tableStructure = $structureResult[1];
+                            // Write table structure to a file
+                            $structureFilename = "{$tableName}_structure.sql";
+                            // file_put_contents($folderPath . $structureFilename, $tableStructure);
+                            $zip->addFromString($wpDBFolderNameInZip . $structureFilename, $tableStructure);
+                            // Export table records in batches
+                            // Number of rows to export per batch
+                            $batchSize = 1000;
+                            $offset = 0;
+                            $batchNumber = 1;
                             do {
                                 if ($dontexptpostrevisions && $tableName == 'wp_posts') {
                                     $recordsQuery = "SELECT * FROM {$tableName} WHERE post_type != 'revision' LIMIT {$offset}, {$batchSize}";
@@ -340,198 +269,108 @@ class Azure_app_service_migration_Admin
                                 $records = $wpdb->get_results($recordsQuery, ARRAY_A);
                                 // Write records to a file
                                 $recordsFilename = "{$tableName}_records_batch{$batchNumber}.sql";
+
                                 if (!empty($records)) {
                                     $recordsContent = "";
                                     foreach ($records as $record) {
-                                        $recordValues = array_map(function ($value) {
-                                            return "'" . addslashes($value) . "'";
-                                        }, $record);
+                                        $recordValues = [];
+                                        foreach ($record as $value) {
+                                            if (is_null($value)) {
+                                                $recordValues[] = "NULL";
+                                            } elseif (is_int($value) || is_float($value) || is_numeric($value)) {
+                                                $recordValues[] = $value;
+                                            } elseif (is_bool($value)) {
+                                                $recordValues[] = $value ? 'TRUE' : 'FALSE';
+                                            } elseif (is_object($value) || is_array($value)) {
+                                                $recordValues[] = "'" . addslashes(serialize($value)) . "'";
+                                            }
+                                            elseif (is_string($value)) {
+                                                // Handle specific data types
+                                                if (is_numeric($value)) {
+                                                    // Numeric types (INTEGER, FLOAT, DECIMAL, etc.)
+                                                    $recordValues[] = $value;
+                                                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                                                    // Date type (YYYY-MM-DD)
+                                                    $recordValues[] = "'" . $value . "'";
+                                                } elseif (preg_match('/^\d{2}:\d{2}:\d{2}$/', $value)) {
+                                                    // Time type (HH:MM:SS)
+                                                    $recordValues[] = "'" . $value . "'";
+                                                } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $value)) {
+                                                    // Datetime type (YYYY-MM-DD HH:MM:SS)
+                                                    $recordValues[] = "'" . $value . "'";
+                                                } elseif (is_numeric($value) && (strpos($value, '.') !== false || strpos($value, 'e') !== false)) {
+                                                    // Float or Decimal type (values with decimal points or scientific notation)
+                                                    $recordValues[] = $value;
+                                                } else {
+                                                    // String types (CHAR, VARCHAR, TEXT, etc.)
+                                                    $recordValues[] = "'" . addslashes($value) . "'";
+                                                }
+                                            } else {
+                                                $recordValues[] = "'" . addslashes($value) . "'";
+                                            }
+                                        }
                                         $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");\n";
                                     }
-                                    // Write records content to a file
-                                    if (!file_put_contents($folderPath . $recordsFilename, $recordsContent)) {
-                                        $failedBatch = true; // Mark the batch as failed
-                                        break; // Exit the loop if failed to write the file
-                                    }
+                                    $zip->addFromString($wpDBFolderNameInZip . $recordsFilename, $recordsContent);
                                 }
                                 // Increment the offset and batch number
                                 $offset += $batchSize;
                                 $batchNumber++;
                             } while (!empty($records));
+
                         }
                     }
-                }
-                // It will generate the Content folder as a zip file.
-                $File_Name = $_SERVER['HTTP_HOST'];
-                $datetime = date('dMY_His');
-                $folderPath = $wp_root_path . '/wp-content/';
-                $zipFilePath = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/archive.zip';
-                // Create a new ZIP archive
-                $zip = new ZipArchive();
-                // Open the ZIP archive
-                if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-                    // Add the contents of the folder to the ZIP archive
-                    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($folderPath));
-                    foreach ($files as $name => $file) {
-                        // Exclude directories from the ZIP archive
-                        if (!$file->isDir()) {
-                            $filePath = $file->getRealPath();
-                            // Adjusted substring to skip the first character (folder separator)
-                            $relativePath = substr($filePath, strlen($folderPath)+-1);
-                            // Add the file to the ZIP archive
-                            $zip->addFile($filePath, $relativePath);
+
+                    // Create a RecursiveDirectoryIterator
+                    $iterator = new RecursiveDirectoryIterator($folderPath);
+                    $filteredElements = [];
+                    $filterIterator = new RecursiveCallbackFilterIterator($iterator, function ($current, $key, $iterator) use ($excludedFolders, &$filteredElements) {
+                        return filterCallback($current, $excludedFolders, $filteredElements);
+                    });
+                    function filterCallback($current, $excludedFolders, &$filteredElements)
+                    {
+                        // Check if the element has already been processed
+                        if (in_array($current->getPathname(), $filteredElements)) {
+                            return false;
                         }
-                    }
-                    // Close the ZIP archive
-                    $zip->close();
-                    // echo 'Folder zipped successfully.';
-                } else {
-                    // echo 'Failed to create the ZIP archive.';
-                }
-                // Unzip archive
-                // Specify Zip file path
-                $zipFile = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/archive.zip';
-                // Extract the ZIP contents
-                $extractPath = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent';
-                // Create a new instance of ZipArchive
-                $zip = new ZipArchive();
-                // Open the ZIP file
-                if ($zip->open($zipFile) === true) {
-                    // Extract the contents to the specified extract path
-                    $zip->extractTo($extractPath);
-                    // Close the ZIP file
-                    $zip->close();
-                    // echo 'Extraction completed successfully.';
-                } else {
-                    // echo 'Failed to open the ZIP file.';
-                }
-                // Folder Empty Zip file
-                // Directory path
-                $directoryPath = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/';
-                // The actual ZIP file name
-                $zipFileName = 'archive.zip';
-                $zipFilePath = $directoryPath . '/' . $zipFileName;
-                if (file_exists($zipFilePath)) {
-                    if (unlink($zipFilePath)) {
-                        // echo 'ZIP file deleted successfully.';
-                    } else {
-                        // echo 'Failed to delete the ZIP file.';
-                    }
-                } else {
-                    // echo 'ZIP file does not exist.';
-                }
-                // Deleting a particular folder
-                function deleteFolder($folderPath)
-                {
-                    if (!is_dir($folderPath)) {
-                        return;
-                    }
-                    $files = new RecursiveIteratorIterator(
-                        new RecursiveDirectoryIterator($folderPath, RecursiveDirectoryIterator::SKIP_DOTS),
-                        RecursiveIteratorIterator::CHILD_FIRST
-                    );
-                    foreach ($files as $file) {
-                        if ($file->isDir()) {
-                            rmdir($file->getRealPath());
-                        } else {
-                            unlink($file->getRealPath());
-                        }
-                    }
-                    rmdir($folderPath);
-                }
-                // Do not export media library
-                function getDontExptsMediaLibrary()
-                {
-                    // echo "Do not export media library is selected. Performing action for Do not export media library.<br>";
-                    $wp_root_path = get_home_path();
-                    $folderPath = $wp_root_path . 'wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/uploads';
-                    deleteFolder($folderPath);
-                }
-
-                // Do not export themes
-                function getDontExptsThems()
-                {
-                    // echo "Do not export themes is selected. Performing action for Do not export themes.<br>";
-                    $wp_root_path = get_home_path();
-                    $folderPath = $wp_root_path . 'wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/themes';
-                    deleteFolder($folderPath);
-                }
-
-                // Do not export must-use plugins
-                function getDontExptMustusePlugs()
-                {
-                    // echo "Do not export must-use plugins is selected. Performing action for Do not export must-use plugins.<br>";
-                    $wp_root_path = get_home_path();
-                    $folderPath = $wp_root_path . 'wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/mu-plugins';
-                    deleteFolder($folderPath);
-                }
-
-                // Do not export plugins
-                function getDontExptPlugins()
-                {
-                    //echo "Do not export plugins is selected. Performing action for Do not export plugins.<br>";
-                    $wp_root_path = get_home_path();
-                    $folderPath = $wp_root_path . 'wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent/plugins';
-                    deleteFolder($folderPath);
-                }
-
-                foreach ($selectedCheckboxes as $checkbox) {
-                    switch ($checkbox) {
-                        case 'hiddendontexptsmedialibrary':
-                            // Handle logic for check3
-                            echo (getDontExptsMediaLibrary());
-                            break;
-                        case 'hiddendontexptsthems':
-                            // Handle logic for check4
-                            echo (getDontExptsThems());
-                            break;
-                        case 'hiddendontexptmustuseplugs':
-                            // Handle logic for check5
-                            echo (getDontExptMustusePlugs());
-                            break;
-                        case 'hiddendontexptplugins':
-                            // Handle logic for check6
-                            echo (getDontExptPlugins());
-                            break;
-                    }
-                }
-                // Protect this backup with a password functionality
-                $directoryPath = $wp_root_path . 'wp-content/plugins/azure_app_service_migration/backupwebsite/bkupcontent';
-                $zipFilePath = $wp_root_path . '/wp-content/plugins/azure_app_service_migration/backupwebsite/zipfiles/' . $File_Name . '_' . $datetime . '.zip';
-                $password = $_REQUEST['hiddenconfpassword'];
-                // Create a new ZIP archive
-                $zip = new ZipArchive();
-                if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-                    // Add files from the directory to the ZIP archive
-                    $files = new RecursiveIteratorIterator(
-                        new RecursiveDirectoryIterator($directoryPath),
-                        RecursiveIteratorIterator::LEAVES_ONLY
-                    );
-                    foreach ($files as $name => $file) {
-                        if (!$file->isDir()) {
-                            $filePath = $file->getRealPath();
-                            $relativePath = substr($filePath, strlen($directoryPath)+-1);
-                            // Add the file to the ZIP archive
-                            $zip->addFile($filePath, $relativePath);
-                            // Set password encryption for the added file
-                            if ($confpassword != '') {
-                                $zip->setEncryptionName($relativePath, ZipArchive::EM_AES_256, $password);
+                        // Exclude the specified folders and their subdirectories
+                        foreach ($excludedFolders as $excludedFolder) {
+                            if ($current->getFilename() === $excludedFolder && $current->isDir()) {
+                                return false;
                             }
                         }
+                        // Mark the element as processed
+                        $filteredElements[] = $current->getPathname();
+                        return true;
                     }
-                    // Close the ZIP archive
-                    $zip->close();
+                    // Create a RecursiveIteratorIterator to iterate through the filtered files
+                    $files = new RecursiveIteratorIterator($filterIterator);
+                    foreach ($files as $name => $file) {
+                        if (!$file->isDir()) {
+                            $filePath = $file->getRealPath();
+                            $relativePath = substr($filePath, strlen($folderPath)+-1);
+                            // $zip->addFile($filePath, $relativePath);
+                            $zip->addFile($filePath, $wpContentFolderNameInZip . $relativePath);
+                            // Set password encryption for the added file
+                            // if ($confpassword != '') {
+                            //     //$zip->setPassword($password);
+                            //     $zip->setEncryptionName($relativePath, ZipArchive::EM_AES_256, $password);
+                            // }
+                        }
+                    }
+
                     echo json_encode(array(
                         "status" => 1,
                         "message" => "ZIP archive created successfully.",
                     ));
+                    $zip->close();
+
                 } else {
                     echo json_encode(array(
                         "status" => 0,
                         "message" => "Failed to create ZIP.",
                     ));
                 }
-                // }
             }
         }
         wp_die();
