@@ -122,6 +122,46 @@ class Azure_app_service_migration {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-azure_app_service_migration-public.php';
 
+		/**
++        * The class responsible for calling all actions for Import.
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/engines/class-azure_app_service_migration-import-controller.php';
+
+		/**
++        * The class responsible for defining actions for wp-content import.
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/engines/import/class-azure_app_service_migration-import-content.php';
+
+		/**
++        * The class responsible for defining actions for database import.
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/engines/import/class-azure_app_service_migration-import-database.php';
+
+		/**
++        * The class responsible for defining database helper functions.
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'utils/class-database_manager.php';
+
+		/**
++        * The class defining zip extractor helper functions
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'utils/class-zip_extractor.php';
+
+		/**
++        * The class defining zip extractor helper functions
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'utils/class-common_utils.php';
+
+		/**
++        * The class defining plugin constants
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'constants.php';
+
+		/**
++        * The class defining plugin exceptions
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'exceptions.php';
+
 		$this->loader = new Azure_app_service_migration_Loader();
 
 	}
