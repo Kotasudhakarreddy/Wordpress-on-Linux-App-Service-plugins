@@ -121,6 +121,10 @@ class Azure_app_service_migration {
 		 * side of the site.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-azure_app_service_migration-public.php';
+		
+		// Include the required classes
+        require_once plugin_dir_path(dirname(__FILE__)) . 'admin/AjaxHandler.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'admin/FileBackupHandler.php';
 
 		/**
 +        * The class responsible for calling all actions for Import.
@@ -198,8 +202,9 @@ class Azure_app_service_migration {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		// action hook for admin menu
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'azure_app_service_migration_menu' );
-		// action hook for ajax
-		$this->loader->add_action('wp_ajax_admin_ajax_request', $plugin_admin, 'handle_ajax_requests_admin');
+		// Register the AJAX handler
+        $ajaxHandler = new AjaxHandler();
+        $this->loader->add_action('wp_ajax_admin_ajax_request', $ajaxHandler, 'handle_ajax_requests_admin');
 
 	}
 
