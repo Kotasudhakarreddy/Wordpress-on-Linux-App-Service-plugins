@@ -1,32 +1,9 @@
 <?php
 class Azure_app_service_migration_Import_Controller {
 
-	/**
-	 * Short Description. (use period)
-	 *
-	 * Long Description.
-	 *
-	 * @since    1.0.0
-	 */
-	
-	 /* Pending implementation
-	 public static function import_upload() {
-
-	}*/
-
-	/*
-	public static function check_encryption() {
-
-	}*/
-
-	/*
-	public static function decrypt() {
-
-	}*/
-
     public static function import($params) {
         
-        //To DO: get import zip path from uploaded file and check for encryption
+        //To DO: upload zip file and check for encryption
         
 		//Import wp-content
 		$aasm_import_wpcontent = new Azure_app_service_migration_Import_Content(AASM_IMPORT_ZIP_PATH, []);

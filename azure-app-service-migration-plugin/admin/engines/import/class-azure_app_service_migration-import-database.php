@@ -43,10 +43,16 @@ class Azure_app_service_migration_Import_Database {
 		// create extractor object for import zip file
 		$archive = new AASM_Zip_Extractor( $this->import_zip_path );
 
+        // extract database sql files into temporary directory
         $archive->extract_database_files(AASM_DATABASE_RELATIVE_PATH_IN_ZIP, $this->db_temp_dir);
 
+        // create new database
+        $database_manager->create_database($this->new_database_name);
+
+        // Import each table sql file into the new database
         $this->import_db_sql_files($this->db_temp_dir);
 
+        // update DB_NAME constant in wp-config
         AASM_Common_Utils::update_dbname_wp_config($this->new_database_name);
         
     }
@@ -55,14 +61,12 @@ class Azure_app_service_migration_Import_Database {
         if (!file_exists($this->db_temp_dir)) {
             mkdir($this->db_temp_dir, 0777);
         }
-        
-        // create new database
-        $database_manager->create_database($this->new_database_name);
 
         $files = scandir($this->db_temp_dir);
 
         // import each table (stored as sql file)
         foreach ($files as $file) {
+
             // Exclude current directory (.) and parent directory (..)
             if ($file != '.' && $file != '..') {
                 $filePath = $this->db_temp_dir . '/' . $file;
