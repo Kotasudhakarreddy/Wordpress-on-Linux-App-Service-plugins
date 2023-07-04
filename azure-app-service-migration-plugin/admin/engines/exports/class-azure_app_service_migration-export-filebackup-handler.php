@@ -70,13 +70,16 @@ class Azure_app_service_migration_Export_FileBackupHandler
 
     private function deleteExistingZipFiles($wp_root_path)
     {
-        $File_Name = $_SERVER['HTTP_HOST'];
-        $iterator = new DirectoryIterator($wp_root_path . '/wp-content/plugins/azure_app_service_migration/');
-        foreach ($iterator as $file) {
-            if ($file->isFile() && strpos($file->getFilename(), $File_Name) === 0 && pathinfo($file->getFilename(), PATHINFO_EXTENSION) === 'zip') {
-                $filePath = $file->getPathname();
-                unlink($filePath);
-            }
+        try {
+            $File_Name = $_SERVER['HTTP_HOST'];
+            $iterator = new DirectoryIterator($wp_root_path . '/wp-content/plugins/azure_app_service_migration/');
+            foreach ($iterator as $file) {
+                if ($file->isFile() && strpos($file->getFilename(), $File_Name) === 0 && pathinfo($file->getFilename(), PATHINFO_EXTENSION) === 'zip') {
+                    $filePath = $file->getPathname();
+                    unlink($filePath);
+                }
+            }} catch (Exception $e) {
+            throw new AASM_File_Delete_Exception('File Delete error:' . $e->getMessage());
         }
     }
 
@@ -86,31 +89,33 @@ class Azure_app_service_migration_Export_FileBackupHandler
         $retryDelay = 5; // in seconds
         $retryCount = 0;
         $zipCreated = false;
+        try {
+            while ($retryCount < $maxRetries && !$zipCreated) {
+                $zip = new ZipArchive();
+                if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                    $wpContentFolderNameInZip = 'wp-content/';
+                    $zip->addEmptyDir($wpContentFolderNameInZip);
 
-        while ($retryCount < $maxRetries && !$zipCreated) {
-            $zip = new ZipArchive();
-            if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-                $wpContentFolderNameInZip = 'wp-content/';
-                $zip->addEmptyDir($wpContentFolderNameInZip);
+                    if (!$dontdbsql) {
+                        $wpDBFolderNameInZip = 'wp-database/';
+                        $zip->addEmptyDir($wpDBFolderNameInZip);
+                        $this->exportDatabaseTables($zip, $wpDBFolderNameInZip, $password, $dontexptpostrevisions);
+                    }
 
-                if (!$dontdbsql) {
-                    $wpDBFolderNameInZip = 'wp-database/';
-                    $zip->addEmptyDir($wpDBFolderNameInZip);
-                    $this->exportDatabaseTables($zip, $wpDBFolderNameInZip, $password, $dontexptpostrevisions);
+                    $wp_root_path = get_home_path();
+                    $folderPath = $wp_root_path . '/wp-content/';
+                    $this->addFilesToZip($zip, $folderPath, $wpContentFolderNameInZip, $excludedFolders, $password);
+
+                    $zip->close();
+                    $zipCreated = true;
+                } else {
+                    $retryCount++;
+                    sleep($retryDelay);
                 }
-
-                $wp_root_path = get_home_path();
-                $folderPath = $wp_root_path . '/wp-content/';
-                $this->addFilesToZip($zip, $folderPath, $wpContentFolderNameInZip, $excludedFolders, $password);
-
-                $zip->close();
-                $zipCreated = true;
-            } else {
-                $retryCount++;
-                sleep($retryDelay);
             }
+        } catch (Exception $e) {
+            throw new AASM_Archive_Exception('Zip creation error:' . $e->getMessage());
         }
-
         return $zipCreated;
     }
 
@@ -119,20 +124,23 @@ class Azure_app_service_migration_Export_FileBackupHandler
         global $wpdb;
         $tablesQuery = "SHOW TABLES";
         $tables = $wpdb->get_results($tablesQuery, ARRAY_N);
+        try {
+            foreach ($tables as $table) {
+                $tableName = $table[0];
+                $structureQuery = "SHOW CREATE TABLE {$tableName}";
+                $structureResult = $wpdb->get_row($structureQuery, ARRAY_N);
+                $tableStructure = $structureResult[1];
+                $structureFilename = "{$tableName}_structure.sql";
+                $zip->addFromString($wpDBFolderNameInZip . $structureFilename, $tableStructure);
 
-        foreach ($tables as $table) {
-            $tableName = $table[0];
-            $structureQuery = "SHOW CREATE TABLE {$tableName}";
-            $structureResult = $wpdb->get_row($structureQuery, ARRAY_N);
-            $tableStructure = $structureResult[1];
-            $structureFilename = "{$tableName}_structure.sql";
-            $zip->addFromString($wpDBFolderNameInZip . $structureFilename, $tableStructure);
+                if ($password !== '') {
+                    $zip->setEncryptionName($wpDBFolderNameInZip . $structureFilename, ZipArchive::EM_AES_256, $password);
+                }
 
-            if ($password !== '') {
-                $zip->setEncryptionName($wpDBFolderNameInZip . $structureFilename, ZipArchive::EM_AES_256, $password);
+                $this->exportTableRecords($wpdb, $tableName, $zip, $wpDBFolderNameInZip, $password, $dontexptpostrevisions);
             }
-
-            $this->exportTableRecords($wpdb, $tableName, $zip, $wpDBFolderNameInZip, $password, $dontexptpostrevisions);
+        } catch (Exception $e) {
+            throw new AASM_Export_Exception('DB Tables export exception:' . $e->getMessage());
         }
     }
 
@@ -141,40 +149,43 @@ class Azure_app_service_migration_Export_FileBackupHandler
         $batchSize = 1000;
         $offset = 0;
         $batchNumber = 1;
+        try {
+            do {
+                if ($dontexptpostrevisions && $tableName == 'wp_posts') {
+                    $recordsQuery = "SELECT * FROM {$tableName} WHERE post_type != 'revision' LIMIT {$offset}, {$batchSize}";
+                } else {
+                    $recordsQuery = "SELECT * FROM {$tableName} LIMIT {$offset}, {$batchSize}";
+                }
 
-        do {
-            if ($dontexptpostrevisions && $tableName == 'wp_posts') {
-                $recordsQuery = "SELECT * FROM {$tableName} WHERE post_type != 'revision' LIMIT {$offset}, {$batchSize}";
-            } else {
-                $recordsQuery = "SELECT * FROM {$tableName} LIMIT {$offset}, {$batchSize}";
-            }
+                $records = $wpdb->get_results($recordsQuery, ARRAY_A);
+                $recordsFilename = "{$tableName}_records_batch{$batchNumber}.sql";
 
-            $records = $wpdb->get_results($recordsQuery, ARRAY_A);
-            $recordsFilename = "{$tableName}_records_batch{$batchNumber}.sql";
+                if (!empty($records)) {
+                    $recordsContent = "";
 
-            if (!empty($records)) {
-                $recordsContent = "";
+                    foreach ($records as $record) {
+                        $recordValues = [];
 
-                foreach ($records as $record) {
-                    $recordValues = [];
+                        foreach ($record as $value) {
+                            $recordValues[] = $this->formatRecordValue($value);
+                        }
 
-                    foreach ($record as $value) {
-                        $recordValues[] = $this->formatRecordValue($value);
+                        $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");\n";
                     }
 
-                    $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");\n";
+                    $zip->addFromString($wpDBFolderNameInZip . $recordsFilename, $recordsContent);
+
+                    if ($password !== '') {
+                        $zip->setEncryptionName($wpDBFolderNameInZip . $recordsFilename, ZipArchive::EM_AES_256, $password);
+                    }
                 }
 
-                $zip->addFromString($wpDBFolderNameInZip . $recordsFilename, $recordsContent);
-
-                if ($password !== '') {
-                    $zip->setEncryptionName($wpDBFolderNameInZip . $recordsFilename, ZipArchive::EM_AES_256, $password);
-                }
-            }
-
-            $offset += $batchSize;
-            $batchNumber++;
-        } while (!empty($records));
+                $offset += $batchSize;
+                $batchNumber++;
+            } while (!empty($records));
+        } catch (Exception $e) {
+            throw new AASM_Export_Exception('Table records export exception:' . $e->getMessage());
+        }
     }
 
     private function formatRecordValue($value)
@@ -208,36 +219,40 @@ class Azure_app_service_migration_Export_FileBackupHandler
 
     private function addFilesToZip($zip, $folderPath, $wpContentFolderNameInZip, $excludedFolders, $password)
     {
-        $iterator = new RecursiveDirectoryIterator($folderPath);
-        $filteredElements = [];
-        $filterIterator = new RecursiveCallbackFilterIterator($iterator, function ($current, $key, $iterator) use ($excludedFolders, &$filteredElements) {
-            return $this->filterCallback($current, $excludedFolders, $filteredElements);
-        });
+        try {
+            $iterator = new RecursiveDirectoryIterator($folderPath);
+            $filteredElements = [];
+            $filterIterator = new RecursiveCallbackFilterIterator($iterator, function ($current, $key, $iterator) use ($excludedFolders, &$filteredElements) {
+                return $this->filterCallback($current, $excludedFolders, $filteredElements);
+            });
 
-        $files = new RecursiveIteratorIterator($filterIterator);
-        $cntbatchSize = 100;
-        $batchNumber = 1;
-        $currentBatchFiles = [];
+            $files = new RecursiveIteratorIterator($filterIterator);
+            $cntbatchSize = 100;
+            $batchNumber = 1;
+            $currentBatchFiles = [];
 
-        foreach ($files as $name => $file) {
-            if (!$file->isDir()) {
-                $filePath = $file->getRealPath();
-                $relativePath = substr($filePath, strlen($folderPath)+-1);
-                $currentBatchFiles[] = [
-                    'path' => $filePath,
-                    'relativePath' => $relativePath,
-                ];
+            foreach ($files as $name => $file) {
+                if (!$file->isDir()) {
+                    $filePath = $file->getRealPath();
+                    $relativePath = substr($filePath, strlen($folderPath)+-1);
+                    $currentBatchFiles[] = [
+                        'path' => $filePath,
+                        'relativePath' => $relativePath,
+                    ];
 
-                if (count($currentBatchFiles) >= $cntbatchSize) {
-                    $this->addFilesToZipBatch($zip, $currentBatchFiles, $wpContentFolderNameInZip, $password, $batchNumber);
-                    $batchNumber++;
-                    $currentBatchFiles = [];
+                    if (count($currentBatchFiles) >= $cntbatchSize) {
+                        $this->addFilesToZipBatch($zip, $currentBatchFiles, $wpContentFolderNameInZip, $password, $batchNumber);
+                        $batchNumber++;
+                        $currentBatchFiles = [];
+                    }
                 }
             }
-        }
 
-        if (!empty($currentBatchFiles)) {
-            $this->addFilesToZipBatch($zip, $currentBatchFiles, $wpContentFolderNameInZip, $password, $batchNumber);
+            if (!empty($currentBatchFiles)) {
+                $this->addFilesToZipBatch($zip, $currentBatchFiles, $wpContentFolderNameInZip, $password, $batchNumber);
+            }
+        } catch (Exception $e) {
+            throw new AASM_Archive_Exception('Failing to add the file to ZipArchive:' . $e->getMessage());
         }
     }
 
@@ -268,14 +283,18 @@ class Azure_app_service_migration_Export_FileBackupHandler
 
     private function addFilesToZipBatch($zip, $currentBatchFiles, $wpContentFolderNameInZip, $password, $batchNumber)
     {
-        foreach ($currentBatchFiles as $file) {
-            $path = $file['path'];
-            $relativePath = $file['relativePath'];
-            $zip->addFile($path, $wpContentFolderNameInZip . $relativePath);
+        try {
+            foreach ($currentBatchFiles as $file) {
+                $path = $file['path'];
+                $relativePath = $file['relativePath'];
+                $zip->addFile($path, $wpContentFolderNameInZip . $relativePath);
 
-            if ($password !== '') {
-                $zip->setEncryptionName($wpContentFolderNameInZip . $relativePath, ZipArchive::EM_AES_256, $password);
+                if ($password !== '') {
+                    $zip->setEncryptionName($wpContentFolderNameInZip . $relativePath, ZipArchive::EM_AES_256, $password);
+                }
             }
+        } catch (Exception $e) {
+            throw new AASM_Archive_Exception('Failing to add the file to ZipArchive during batch:' . $e->getMessage());
         }
     }
 }
