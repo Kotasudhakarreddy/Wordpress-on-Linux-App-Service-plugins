@@ -142,6 +142,16 @@ class Azure_app_service_migration {
 +       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/engines/import/class-azure_app_service_migration-import-database.php';
 
 		/**
++        * The class responsible for defining actions for zip encryption.
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/engines/import/class-azure_app_service_migration-import-database.php';
+
+		/**
++        * The class responsible for defining actions for blob storage.
++        */
++       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/engines/import/class-blob_storage.php';
+
+		/**
 +        * The class responsible for defining database helper functions.
 +        */
 +       require_once plugin_dir_path( dirname( __FILE__ ) ) . 'utils/class-database_manager.php';
