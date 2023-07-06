@@ -1,38 +1,39 @@
 <div class="col-md-11 mt-5">
     <div class="shadow p-3 mb-5 bg-body rounded">
-        <div class="shadow-sm p-4 mb-4 bg-white boderbottom">Import</div>
+	<div class="shadow-sm p-4 mb-4 bg-white boderbottom">Import</div>
         <div style="text-align: center; margin-top: 20px;">
-            <button type="button" name="import" id="aasmimport" style="padding: 8px 20px; background-color: #337ab7; color: #fff; border: none; border-radius: 4px;">Import</button>
+            <fluent-button appearance="accent" id="dialogOpener">Import</fluent-button>
         </div>
+	<fluent-dialog id="defaultDialog" hidden  trap-focus modal>
+  <div style="margin: 20px;">
+    <h2>Import Status</h2>
+    <fluent-button id="dialogCloser" appearance="accent" tabindex="0">Cancel</fluent-button>
+  </div>
+</fluent-dialog>
         <div style="margin-top: 20px;">
             <input type="checkbox" name="caching_cdn" id="caching_cdn" style="margin-right: 8px; transform: scale(0.8);">
             <label for="caching_cdn" style="font-size: 14px;">Re-enable caching and/or CDN/AFD features</label>
         </div>
     </div>
 </div>
-<script type="text/javascript" language="javascript">
-    $(document).ready(function(){
-    })
 
-    $('#aasmimport').click(function(){
-        var popup = document.createElement("div");
-            popup.style.display = "block";
-            popup.style.position = "fixed";
-            popup.style.top = "50%";
-            popup.style.left = "50%";
-            popup.style.transform = "translate(-50%, -50%)";
-            popup.style.width = "300px";
-            popup.style.padding = "20px";
-            popup.style.backgroundColor = "#f0f0f0";
-            popup.style.borderRadius = "4px";
-            popup.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.3)";
-            popup.style.zIndex = "9999";
+<div id="exportdownloadfile">                                                                                            
+        <?php                                                                           
+        $wp_root_url=get_home_url();                     
+        $src = $wp_root_url."/wp-content/plugins/azure-app-service-migration-plugin/assets/node_modules/@fluentui/web-components/dist/web-components.js";
+        ?>                                                                                                 
+</div>  
 
-            // Set the dynamic string
-            var dynamicString = "<?php echo addslashes(AASM_STATUS_MSG); ?>";
-            popup.textContent = dynamicString;
+<script type="module" src="<?php echo esc_url($src); ?>"></script>
 
-            // Append the popup to the document body
-            document.body.appendChild(popup);
-    });
+
+<script type="text/javascript" language="javascript">                                                                               
+$(document).ready(function() {                                                                                                                                                                                         
+});                                                                                                                                 
+document.getElementById("dialogOpener").addEventListener("click",function(){                                                   
+    document.getElementById('defaultDialog').hidden = false;                                                                                             
+});                                                                                                                             
+document.getElementById("dialogCloser").addEventListener("click", function() {                                                  
+    document.getElementById('defaultDialog').hidden = true;     
+});                                                                                               
 </script>
