@@ -85,4 +85,24 @@ class AASM_Database_Manager {
             echo "Error importing SQL file: " . $this->connection->error;
         }
     }
+
+    public function run_custom_sql($databaseName, $sql) {
+        $conn = $this->connect();
+        $conn->select_db($databaseName);
+
+        // Execute each SQL statement in the string
+        $sqlStatements = explode(';', $sql);
+        foreach ($sqlStatements as $statement) {
+            $trimmedStatement = trim($statement);
+            if (!empty($trimmedStatement)) {
+                if ($conn->query($trimmedStatement) === TRUE) {
+                    echo "SQL statement executed successfully: $trimmedStatement\n";
+                } else {
+                    echo "Error executing SQL statement: $conn->error\n";
+                }
+            }
+        }
+
+        $conn->close();
+    }
 }

@@ -8,7 +8,7 @@ class AASM_Common_Utils {
     }
 
     // This function updates DB_NAME constant in wp-config.php file
-    private function update_dbname_wp_config($new_db_name) {
+    public static function update_dbname_wp_config($new_db_name) {
         // Path to the wp-config.php file
         $config_file_path = ABSPATH . 'wp-config.php';
     
@@ -24,5 +24,17 @@ class AASM_Common_Utils {
     
         // Write the updated contents back to the wp-config.php file
         file_put_contents($config_file_path, $updated_file_contents);
+    }
+
+    public static function delete_file($filePath) {
+        if (file_exists($filePath)) {
+            if (unlink($filePath)) {
+                echo "File deleted successfully.";
+            } else {
+                echo "Unable to delete the file.";
+            }
+        } else {
+            echo "File does not exist.";
+        }
     }
 }

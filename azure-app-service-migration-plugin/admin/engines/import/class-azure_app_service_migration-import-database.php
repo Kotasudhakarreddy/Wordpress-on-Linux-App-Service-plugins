@@ -9,6 +9,7 @@ class Azure_app_service_migration_Import_Database {
     private $import_zip_path = null;
     private $params = null;
     private $new_database_name;
+    private $old_database_name;
     private $database_manager;
     private $db_temp_dir;
 
@@ -30,6 +31,7 @@ class Azure_app_service_migration_Import_Database {
 
         $this->database_manager = new AASM_Database_Manager($hostname, $username, $password);
         $this->new_database_name = $this->generate_database_name($dbname, $this->database_manager);
+        $this->old_database_name = $dbname;
     }
 
     public function import_database()
@@ -47,7 +49,7 @@ class Azure_app_service_migration_Import_Database {
         $archive->extract_database_files(AASM_DATABASE_RELATIVE_PATH_IN_ZIP, $this->db_temp_dir);
 
         // create new database
-        $database_manager->create_database($this->new_database_name);
+        $this->database_manager->create_database($this->new_database_name);
 
         // Import each table sql file into the new database
         $this->import_db_sql_files($this->db_temp_dir);
@@ -55,6 +57,10 @@ class Azure_app_service_migration_Import_Database {
         // update DB_NAME constant in wp-config
         AASM_Common_Utils::update_dbname_wp_config($this->new_database_name);
         
+        // imports w3tc options from original DB to new DB
+        if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
+            $this->import_w3tc_options();
+        }
     }
 
     private function import_db_sql_files() {
@@ -73,10 +79,48 @@ class Azure_app_service_migration_Import_Database {
 
                 // Check if the path is a file
                 if (is_file($filePath) && str_ends_with($filepath, '.sql')) {
-                    $database_manager->import_sql_file($this->new_database_name, $sql_file_path);
+                    $this->database_manager->import_sql_file($this->new_database_name, $sql_file_path);
                 }
             }
         }
+    }
+
+    private function import_w3tc_options() {
+        $sourceDatabase = $this->old_database_name;
+        $destinationDatabase = $this->new_database_name;
+
+        // Assuming you already fetched the SQL query result
+        $sqlResult = $conn->query("SELECT option_id, option_name, option_value, autoload FROM $sourceDatabase.wp_options WHERE option_name LIKE '%w3tc%'");
+
+        // Generate the import query
+        $importQuery = generate_w3tc_import_query($destinationDatabase, $sqlResult);
+
+        // Run the import query on the destination database
+        $this->database_manager->run_custom_sql($destinationDatabase, $importQuery);
+
+    }
+
+    public function generate_w3tc_import_query($databaseName, $w3tc_options) {
+        // Start building the SQL query
+        $importQuery = "INSERT INTO $databaseName.wp_options (option_id, option_name, option_value, autoload) VALUES";
+    
+        // Iterate over the result rows
+        foreach ($w3tc_options as $row) {
+            $option_id = addslashes($row['option_id']);
+            $option_name = addslashes($row['option_name']);
+            $option_value = addslashes($row['option_value']);
+            $autoload = addslashes($row['autoload']);
+    
+            // Add each row values to the query
+            $importQuery .= " ('$option_id', '$option_name', '$option_value', '$autoload'),";
+        }
+    
+        // Remove the trailing comma
+        $importQuery = rtrim($importQuery, ',');
+
+        $importQuery .= " ON DUPLICATE KEY UPDATE option_value = VALUES(option_value)";
+    
+        return $importQuery;
     }
 
     // Generates a unique database name. Retries 5 times
