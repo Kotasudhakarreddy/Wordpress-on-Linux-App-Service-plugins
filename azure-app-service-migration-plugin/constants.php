@@ -22,7 +22,7 @@ define( 'AASM_IMPORT_ZIP_PATH', AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . DIRECT
                                 'import' . DIRECTORY_SEPARATOR .
                                 'importfile.zip');
 
-define( 'AASM_DATABASE_RELATIVE_PATH_IN_ZIP', 'backupdb' . DIRECTORY_SEPARATOR );
+define( 'AASM_DATABASE_RELATIVE_PATH_IN_ZIP', 'wp-database' . DIRECTORY_SEPARATOR );
 
 define( 'AASM_DATABASE_TEMP_DIR', AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . 'storage' . 
                                 DIRECTORY_SEPARATOR . 'dbtempdir' . DIRECTORY_SEPARATOR );

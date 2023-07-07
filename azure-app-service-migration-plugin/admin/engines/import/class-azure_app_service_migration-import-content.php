@@ -46,9 +46,9 @@ class Azure_app_service_migration_Import_Content {
             );
 		}
 
-        // Extract a file from archive to WP_CONTENT_DIR
+        // Extract all WP-CONTENT files from archive to WP_CONTENT_DIR
         try {
-            $archive->extract( WP_CONTENT_DIR, $files_to_exclude );
+            $archive->extract( ABSPATH, $files_to_exclude );
         } catch (AASM_Archive_Target_Dir_Exception $ex) {
             $completed = false;
         }
