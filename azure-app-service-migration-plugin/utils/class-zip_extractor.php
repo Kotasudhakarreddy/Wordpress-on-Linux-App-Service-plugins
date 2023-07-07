@@ -12,11 +12,10 @@ class AASM_Zip_Extractor {
             throw new AASM_File_Not_Found_Exception( "File Not Found: Couldn't find file at " . $zip_file_name );
         }
     }
-
-    // To Do: Merge extract() and extract_database_files() into single function
     
     public function extract( $destination_dir, $files_to_exclude = [] ) {
 
+        $destination_dir = replace_forward_slash_with_directory_separator($destination_dir);
         if ($destination_dir === null)
         {
             throw new AASM_Archive_Destination_Dir_Exception ('Zip extract error: Target destination not provided.');
@@ -43,6 +42,10 @@ class AASM_Zip_Extractor {
                         break;
                     }
                 }
+
+                // extract only wp-content files
+                if(!str_starts_with($file_name, 'wp-content' . DIRECTORY_SEPARATOR))
+                    $should_exclude_file = true;
 
                 if ($should_exclude_file === false)
                 {
