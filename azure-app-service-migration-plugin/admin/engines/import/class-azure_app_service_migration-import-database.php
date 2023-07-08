@@ -14,24 +14,19 @@ class Azure_app_service_migration_Import_Database {
     private $db_temp_dir;
 
     public function __construct($import_zip_path, $params) {
-        // Path to the uploaded import zip file
-        $this->import_zip_path = ($import_zip_path === null) 
-                                ? AASM_IMPORT_ZIP_PATH
-                                : $import_zip_path; 
-        $this->params = $params;
-
-        // Temporary directory for extracting sql files 
-        $this->db_temp_dir = AASM_DATABASE_TEMP_DIR;
-
         global $wpdb;
         $hostname = $wpdb->dbhost;
         $username = $wpdb->dbuser;
         $password = $wpdb->dbpassword;
-        $dbname   = $wpdb->$dbname;
 
         $this->database_manager = new AASM_Database_Manager($hostname, $username, $password);
+        $this->old_database_name = $wpdb->$dbname;
         $this->new_database_name = $this->generate_database_name($dbname, $this->database_manager);
-        $this->old_database_name = $dbname;
+        $this->params = $params;
+        $this->db_temp_dir = AASM_DATABASE_TEMP_DIR;            // Temporary directory for extracting sql files
+        $this->import_zip_path = ($import_zip_path === null)    // Path to the uploaded import zip file
+                                ? AASM_IMPORT_ZIP_PATH
+                                : $import_zip_path;
     }
 
     public function import_database()

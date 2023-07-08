@@ -17,23 +17,23 @@
     </div>
 </div>
 
-<div id="exportdownloadfile">                                                                                            
-        <?php                                                                           
+<div id="exportdownloadfile">
+        <?php
         $wp_root_url=get_home_url();                     
-        $src = $wp_root_url."/wp-content/plugins/azure-app-service-migration-plugin/assets/node_modules/@fluentui/web-components/dist/web-components.js";
-        ?>                                                                                                 
+        $src = $wp_root_url."/wp-content/plugins/azure_app_service_migration/assets/node_modules/@fluentui/web-components/dist/web-components.js";
+        ?>
 </div>  
 
 <script type="module" src="<?php echo esc_url($src); ?>"></script>
 
 
-<script type="text/javascript" language="javascript">                                                                               
-$(document).ready(function() {                                                                                                                                                                                         
-});                                                                                                                                 
-document.getElementById("dialogOpener").addEventListener("click",function(){                                                   
-    document.getElementById('defaultDialog').hidden = false;                                                                                             
-});                                                                                                                             
-document.getElementById("dialogCloser").addEventListener("click", function() {                                                  
-    document.getElementById('defaultDialog').hidden = true;     
-});                                                                                               
+<script type="text/javascript" language="javascript">
+$(document).ready(function() {
+});
+document.getElementById("dialogOpener").addEventListener("click",function(){
+    document.getElementById('defaultDialog').hidden = false;
+});
+document.getElementById("dialogCloser").addEventListener("click", function() {
+    document.getElementById('defaultDialog').hidden = true;
+});
 </script>
