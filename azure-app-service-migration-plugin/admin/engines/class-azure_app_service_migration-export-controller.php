@@ -129,7 +129,7 @@ class Azure_app_service_migration_Export_Controller
             // Ajax Custome Js file
             wp_enqueue_script("azure_app_service_migrations_ajax_js", AZURE_APP_SERVICE_MIGRATION_PLUGIN_URL . 'assets/js/ajax_jquery.js', array('jquery'), $this->version, false);
 
-            wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/azure_app_service_migration-export-controller.js', array('jquery'), $this->version, false);
+            wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/azure_app_service_migration-controller.js', array('jquery'), $this->version, false);
 
             wp_localize_script($this->plugin_name, "azure_app_service_migration", array(
                 "name" => "Azure App Service Migration",
