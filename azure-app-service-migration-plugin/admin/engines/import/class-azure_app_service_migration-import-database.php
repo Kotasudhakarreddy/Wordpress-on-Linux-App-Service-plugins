@@ -19,7 +19,7 @@ class Azure_app_service_migration_Import_Database {
         $username = $wpdb->dbuser;
         $password = $wpdb->dbpassword;
 
-        $this->database_manager = new AASM_Database_Manager($hostname, $username, $password);
+        $this->database_manager = new AASM_Database_Manager();
         $this->old_database_name = $wpdb->$dbname;
         $this->new_database_name = $this->generate_database_name($dbname, $this->database_manager);
         $this->params = $params;
@@ -47,7 +47,7 @@ class Azure_app_service_migration_Import_Database {
         $this->database_manager->create_database($this->new_database_name);
 
         // Import each table sql file into the new database
-        $this->import_db_sql_files($this->db_temp_dir);
+        $this->import_db_sql_files();
 
         // update DB_NAME constant in wp-config
         AASM_Common_Utils::update_dbname_wp_config($this->new_database_name);
@@ -70,11 +70,11 @@ class Azure_app_service_migration_Import_Database {
 
             // Exclude current directory (.) and parent directory (..)
             if ($file != '.' && $file != '..') {
-                $filePath = $this->db_temp_dir . '/' . $file;
+                $filePath = $this->db_temp_dir . $file;
 
                 // Check if the path is a file
-                if (is_file($filePath) && str_ends_with($filepath, '.sql')) {
-                    $this->database_manager->import_sql_file($this->new_database_name, $sql_file_path);
+                if (is_file($filePath) && str_ends_with($filePath, '.sql')) {
+                    $this->database_manager->import_sql_file($this->new_database_name, $filePath);
                 }
             }
         }
@@ -91,7 +91,7 @@ class Azure_app_service_migration_Import_Database {
         $importQuery = generate_w3tc_import_query($destinationDatabase, $sqlResult);
 
         // Run the import query on the destination database
-        $this->database_manager->run_custom_sql($destinationDatabase, $importQuery);
+        $this->database_manager->run_query($destinationDatabase, $importQuery);
 
     }
 
