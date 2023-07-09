@@ -54,16 +54,27 @@ class Azure_app_service_migration_Import_Content {
             $completed = false;
         }
 
-        // delete helper files produced by w3tc plugin
+        $this->upload_to_blob_storage($params);
+
+        // delete cache files produced by w3tc plugin
         if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
-            $this->delete_w3tc_helper_files();
+            $this->delete_w3tc_cache_files();
         }
     }
 
-    private function delete_w3tc_helper_files()
+    private function delete_w3tc_cache_files()
     {
         AASM_Common_Utils::delete_file(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . AASM_W3TC_ADVANCED_CACHE_PATH);
         AASM_Common_Utils::delete_file(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . AASM_W3TC_OBJECT_CACHE_PATH);
         AASM_Common_Utils::delete_file(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . AASM_W3TC_DB_PATH);        
+    }
+
+    private function upload_to_blob_storage($params)
+    {
+        if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
+            $blob_storage_settings = Azure_app_service_migration_Blob_Storage::get_blob_storage_settings();
+            if (empty($blob_storage_settings))
+                return;
+        }
     }
 }

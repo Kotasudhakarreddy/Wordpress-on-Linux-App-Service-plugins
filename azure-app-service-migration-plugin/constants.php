@@ -54,13 +54,20 @@ define( 'AASM_W3TC_ADVANCED_CACHE_PATH', 'wp-content' . DIRECTORY_SEPARATOR .
                                 'advanced-cache.php' );
 
 // ================
-// = W3TC config path =
+// = W3TC object cache path =
 // ================
 define( 'AASM_W3TC_OBJECT_CACHE_PATH', 'wp-content' . DIRECTORY_SEPARATOR . 
                                 'object-cache.php');
 
 // ================
-// = W3TC config path =
+// = W3TC db.php path =
 // ================
 define( 'AASM_W3TC_DB_PATH', 'wp-content' . DIRECTORY_SEPARATOR . 
                                 'db.php');
+
+// ================
+// = W3TC config master file path =
+// ================
+define( 'AASM_W3TC_CONFIG_MASTER_PATH', 'wp-content' . DIRECTORY_SEPARATOR . 
+                            'w3tc-config' . DIRECTORY_SEPARATOR .
+                            'master.php');

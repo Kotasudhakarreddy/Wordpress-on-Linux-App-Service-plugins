@@ -60,7 +60,7 @@ class Azure_app_service_migration_Import_Database {
 
     private function import_db_sql_files() {
         if (!file_exists($this->db_temp_dir)) {
-            mkdir($this->db_temp_dir, 0777);
+            mkdir($this->db_temp_dir, 0777, true);
         }
 
         $files = scandir($this->db_temp_dir);
