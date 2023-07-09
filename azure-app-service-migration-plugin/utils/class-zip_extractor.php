@@ -54,7 +54,7 @@ class AASM_Zip_Extractor {
                     }
                 }
 
-                // extract only wp-content files
+                // exclude non wp-content files
                 if(!str_starts_with($filename, 'wp-content' . DIRECTORY_SEPARATOR))
                     $should_exclude_file = true;
 
