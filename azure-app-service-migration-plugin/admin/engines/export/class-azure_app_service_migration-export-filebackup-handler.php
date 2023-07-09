@@ -179,10 +179,14 @@ class Azure_app_service_migration_Export_FileBackupHandler
                         $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");\n";
                     }
 
-                    $zip->addFromString($wpDBFolderNameInZip . $recordsFilename, $recordsContent);
+                    if ($batchNumber === 1) {
+                        $zip->addFromString($wpDBFolderNameInZip . $tableName . ".sql", $recordsContent);
+                    } else {
+                        $zip->appendFromString($wpDBFolderNameInZip . $tableName . ".sql", $recordsContent);
+                    }
 
                     if ($password !== '') {
-                        $zip->setEncryptionName($wpDBFolderNameInZip . $recordsFilename, ZipArchive::EM_AES_256, $password);
+                        $zip->setEncryptionName($wpDBFolderNameInZip . $tableName . ".sql", ZipArchive::EM_AES_256, $password);
                     }
                 }
 
@@ -192,6 +196,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
         } catch (Exception $e) {
             throw new AASM_Export_Exception('Table records export exception:' . $e->getMessage());
         }
+
     }
 
     private function formatRecordValue($value)
