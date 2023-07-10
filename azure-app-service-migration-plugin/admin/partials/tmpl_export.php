@@ -23,10 +23,10 @@
     <div id="exportdownloadfile">
         <?php
 $wp_root_url = get_home_url();
-$wp_root_filepath = $wp_root_url . "/wp-content/plugins/azure_app_service_migration/";
+$wp_root_filepath = $wp_root_url . "/wp-content/plugins/azure-app-service-migration-plugin/";
 
 $wp_root_path = get_home_path();
-$dirname = $wp_root_path . "/wp-content/plugins/azure_app_service_migration/";
+$dirname = $wp_root_path . "/wp-content/plugins/azure-app-service-migration-plugin/";
 
 $reportfiles = scandir($dirname, 1);
 foreach ($reportfiles as $file) {
@@ -37,7 +37,7 @@ foreach ($reportfiles as $file) {
     }
 }
 //$src = 'https://unpkg.com/@fluentui/web-components';
-$src = $wp_root_url . "/wp-content/plugins/azure_app_service_migration/assets/node_modules/@fluentui/web-components/dist/web-components.js";
+$src = $wp_root_url . "/wp-content/plugins/azure-app-service-migration-plugin/assets/node_modules/@fluentui/web-components/dist/web-components.js";
 ?>
         <div class="overlay"></div>
     </div>

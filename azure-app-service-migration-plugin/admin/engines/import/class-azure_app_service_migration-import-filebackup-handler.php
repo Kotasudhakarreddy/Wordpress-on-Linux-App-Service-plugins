@@ -36,7 +36,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
 
                 // Specify the desired folder path
                 $wp_root_path = get_home_path();
-                $folderPath = $wp_root_path . 'wp-content/plugins/azure_app_service_migration/ImportedFile';
+                $folderPath = $wp_root_path . 'wp-content/plugins/azure-app-service-migration-plugin/ImportedFile';
 
                 // Create the folder if it doesn't exist
                 if (!is_dir($folderPath)) {
