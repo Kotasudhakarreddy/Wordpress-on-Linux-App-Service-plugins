@@ -60,8 +60,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
                     ));
                     return;
                 }
-                $this->split_file($file);                
-
+                $this->split_file($file, $folderPath);
             }
         }
 
@@ -111,58 +110,50 @@ class Azure_app_service_migration_Import_FileBackupHandler
             } else {
                 echo "Folder does not exist or is not a directory.";
             }
-
         } catch (Exception $e) {
             throw new AASM_File_Delete_Exception('File Delete error:' . $e->getMessage());
         }
     }
 
-    public function split_file($file, $splitSize = 100)
-    {
-        // Create a temporary directory to store split files
-        $tempDir = sys_get_temp_dir() . '/split_files/';
-        // print_r($tempDir);
-        // exit;
-        if (!is_dir($tempDir)) {
-            mkdir($tempDir, 0777, true);
+    public function split_file($file, $folderPath, $splitSize = 5)
+{
+    // Get the file name and temporary file path
+    $fileName = $file['name'];
+    $tempFilePath = $file['tmp_name'];
+
+    // Open the uploaded file
+    $handle = fopen($tempFilePath, 'rb');
+
+    // Determine the number of splits required
+    $numSplits = ceil(filesize($tempFilePath) / ($splitSize * 1024 * 1024));
+
+    // Loop through each split
+    for ($i = 0; $i < $numSplits; $i++) {
+        // Create a new split file
+        $splitFilePath = $folderPath . '/split_' . ($i + 1) . '_' . $fileName;
+        $splitFile = fopen($splitFilePath, 'wb');
+
+        // Read and write the split data
+        $bytesWritten = 0;
+        while ($bytesWritten < $splitSize * 1024 * 1024 && !feof($handle)) {
+            $buffer = fread($handle, 8192);
+            fwrite($splitFile, $buffer);
+            $bytesWritten += strlen($buffer);
         }
 
-        // Get the file name and temporary file path
-        $fileName = $file['name'];
-        $tempFilePath = $file['tmp_name'];
-
-        // Open the uploaded file
-        $handle = fopen($tempFilePath, 'rb');
-
-        // Determine the number of splits required
-        $numSplits = ceil(filesize($tempFilePath) / ($splitSize * 1024 * 1024));
-
-        // Loop through each split
-        for ($i = 0; $i < $numSplits; $i++) {
-            // Create a new split file
-            $splitFilePath = $tempDir . 'split_' . ($i + 1) . '_' . $fileName;
-            $splitFile = fopen($splitFilePath, 'wb');
-
-            // Read and write the split data
-            $bytesWritten = 0;
-            while ($bytesWritten < $splitSize * 1024 * 1024 && !feof($handle)) {
-                $buffer = fread($handle, 8192);
-                fwrite($splitFile, $buffer);
-                $bytesWritten += strlen($buffer);
-            }
-
-            // Close the split file
-            fclose($splitFile);
-        }
-
-        // Close the uploaded file
-        fclose($handle);
-
-        echo json_encode(array(
-            "status" => 1,
-            "message" => "File successfully splitted.",
-        ));
+        // Close the split file
+        fclose($splitFile);
     }
+
+    // Close the uploaded file
+    fclose($handle);
+
+    echo json_encode(array(
+        "status" => 1,
+        "message" => "File successfully splitted.",
+    ));
+}
+
 
 }
 
