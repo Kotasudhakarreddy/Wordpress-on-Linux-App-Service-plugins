@@ -34,11 +34,11 @@ class Azure_app_service_migration_Import_Database {
         // Flag to hold if file data has been processed
 		$completed = true;
 
-		// Start time
-		$start = microtime( true );
-
 		// create extractor object for import zip file
 		$archive = new AASM_Zip_Extractor( $this->import_zip_path );
+
+        // Clean temporary directory to hold sql files
+        AASM_Common_Utils::clear_directory_recursive($this->db_temp_dir);
 
         // extract database sql files into temporary directory
         $archive->extract_database_files(AASM_DATABASE_RELATIVE_PATH_IN_ZIP, $this->db_temp_dir);
@@ -58,6 +58,7 @@ class Azure_app_service_migration_Import_Database {
         }
     }
 
+    // Imports all sql files in wp-database/ directory inside the import zip file
     private function import_db_sql_files() {
         if (!file_exists($this->db_temp_dir)) {
             mkdir($this->db_temp_dir, 0777, true);
@@ -80,11 +81,11 @@ class Azure_app_service_migration_Import_Database {
         }
     }
 
+    // Imports W3 Total Cache settings in wp_options table in database
     private function import_w3tc_options() {
         $sourceDatabase = $this->old_database_name;
         $destinationDatabase = $this->new_database_name;
 
-        // Assuming you already fetched the SQL query result
         $sqlResult = $conn->query("SELECT option_id, option_name, option_value, autoload FROM $sourceDatabase.wp_options WHERE option_name LIKE '%w3tc%'");
 
         // Generate the import query
@@ -117,6 +118,7 @@ class Azure_app_service_migration_Import_Database {
     
         return $importQuery;
     }
+
 
     // Generates a unique database name. Retries 5 times
     private function generate_database_name($current_dbname, $database_manager) {
