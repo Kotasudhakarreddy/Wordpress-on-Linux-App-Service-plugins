@@ -3,8 +3,7 @@
 class Azure_app_service_migration_Import_FileBackupHandler
 {
     public function __construct()
-    {
-        // Add filter to modify the default file upload limit
+    {        // Add filter to modify the default file upload limit
         add_filter('upload_size_limit', array($this, 'set_upload_file_limit'));
     }
 
@@ -42,6 +41,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
                 if (!is_dir($folderPath)) {
                     mkdir($folderPath, 0755, true);
                 }
+
                 // Generate a unique filename
                 $filename = $file['name'];
 
@@ -60,8 +60,28 @@ class Azure_app_service_migration_Import_FileBackupHandler
                     ));
                     return;
                 }
-                $this->split_file($file, $folderPath);
+
+                // Copy the file to the specified destination path
+                if (move_uploaded_file($tmpFile, $destinationPath)) {
+                    // File successfully copied
+                    echo json_encode(array(
+                        "status" => 1,
+                        "message" => "File successfully copied.",
+                    ));
+                } else {
+                    // Failed to copy the file
+                    echo json_encode(array(
+                        "status" => 0,
+                        "message" => "Failed to copy the file.",
+                    ));
+                }
             }
+        } else {
+            // Invalid request parameters
+            echo json_encode(array(
+                "status" => 0,
+                "message" => "Invalid request parameters.",
+            ));
         }
 
         $error_message = 'An error occurred during the backup process.';
@@ -114,46 +134,6 @@ class Azure_app_service_migration_Import_FileBackupHandler
             throw new AASM_File_Delete_Exception('File Delete error:' . $e->getMessage());
         }
     }
-
-    public function split_file($file, $folderPath, $splitSize = 5)
-{
-    // Get the file name and temporary file path
-    $fileName = $file['name'];
-    $tempFilePath = $file['tmp_name'];
-
-    // Open the uploaded file
-    $handle = fopen($tempFilePath, 'rb');
-
-    // Determine the number of splits required
-    $numSplits = ceil(filesize($tempFilePath) / ($splitSize * 1024 * 1024));
-
-    // Loop through each split
-    for ($i = 0; $i < $numSplits; $i++) {
-        // Create a new split file
-        $splitFilePath = $folderPath . '/split_' . ($i + 1) . '_' . $fileName;
-        $splitFile = fopen($splitFilePath, 'wb');
-
-        // Read and write the split data
-        $bytesWritten = 0;
-        while ($bytesWritten < $splitSize * 1024 * 1024 && !feof($handle)) {
-            $buffer = fread($handle, 8192);
-            fwrite($splitFile, $buffer);
-            $bytesWritten += strlen($buffer);
-        }
-
-        // Close the split file
-        fclose($splitFile);
-    }
-
-    // Close the uploaded file
-    fclose($handle);
-
-    echo json_encode(array(
-        "status" => 1,
-        "message" => "File successfully splitted.",
-    ));
-}
-
 
 }
 
