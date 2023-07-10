@@ -36,6 +36,12 @@ define( 'AASM_DATABASE_TEMP_DIR', AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . 'sto
                                 DIRECTORY_SEPARATOR . 'dbtempdir' . DIRECTORY_SEPARATOR );
 
 // ================
+// = Uploads folder path =
+// ================
+define( 'AASM_UPLOADS_FOLDER_PATH', ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 
+                                'uploads' . DIRECTORY_SEPARATOR );
+
+// ================
 // = W3TC plugin path =
 // ================
 define( 'AASM_W3TC_PLUGIN_DIR', 'wp-content' . DIRECTORY_SEPARATOR . 

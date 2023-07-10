@@ -1,5 +1,28 @@
 <?php
-class Azure_app_service_migration_Blob_Storage {
+
+use MicrosoftAzure\Storage\Blob\BlobRestProxy;
+
+class AASM_Blob_Storage_Client {
+
+    private $blob_storage_client;
+
+    public function __construct( $storage_account_name, $storage_account_key ) {
+        $connectionString = "DefaultEndpointsProtocol=https;AccountName=$storage_account_name;AccountKey=$storage_account_key";
+        $this->blob_storage_client = BlobRestProxy::createBlobService($connectionString);
+    }
+
+    public function upload_file($file_path, $blob_container) {
+        if (!is_file($file_path))
+            return;
+        
+        // remove ABSPATH (/home/site/wwwroot) from $file_path to get blob name
+        $blob_name = str_starts_with($file_path, ABSPATH)
+                    ? substr($file_path, strlen(ABSPATH))
+                    : $file_path;
+
+        // TO DO: Include Blob storage library for exceptions and add exception handling here 
+        $blob_storage_client->createBlockBlob($blob_container, $blob_name, $file_path);
+    }
 
     public static function get_blob_storage_settings() {
         $w3tc_config_filepath = AASM_W3TC_CONFIG_MASTER_PATH;
@@ -13,7 +36,7 @@ class Azure_app_service_migration_Blob_Storage {
     
         // Remove the PHP exit tag at the beginning of the file
         $jsonString = substr($fileContents, strpos($fileContents, '{'));
-    
+        
         // Decode the JSON string into a PHP object
         $jsonData = json_decode($jsonString);
         
