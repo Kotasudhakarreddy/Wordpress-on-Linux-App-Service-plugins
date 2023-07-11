@@ -2,19 +2,7 @@
 // CustomLogger.php
 
 class Azure_app_service_migration_Custom_Logger
-{
-    // Create the custom log file
-    public static function createLogFile()
-    {
-        // Define the log file path and name
-        $log_file = WP_PLUGIN_DIR . '/azure_app_service_migration-plugin-log.txt';
-
-        // Create the log file if it doesn't exist
-        if (!file_exists($log_file)) {
-            $file_handle = fopen($log_file, 'w');
-            fclose($file_handle);
-        }
-    }
+{   
 
     // Handle uncaught exceptions and log them
     public static function handleUncaughtException($exception)
@@ -40,8 +28,7 @@ class Azure_app_service_migration_Custom_Logger
     public static function writeToLog($message)
     {
         // Define the log file path and name
-        $log_file = WP_PLUGIN_DIR . '/azure_app_service_migration-plugin-log.txt';
-
+        $log_file = WP_PLUGIN_DIR .'/azure_app_service_migration' . '/azure_app_service_migration-plugin-log.txt';
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
 
@@ -59,7 +46,6 @@ class Azure_app_service_migration_Custom_Logger
         add_action('user_register', array('Azure_app_service_migration_Custom_Logger', 'log_user_registration'), 10, 1);
 
         // Set up error and exception handling
-        self::createLogFile();
         set_error_handler(array('Azure_app_service_migration_Custom_Logger', 'handleError'));
         set_exception_handler(array('Azure_app_service_migration_Custom_Logger', 'handleException'));
     }

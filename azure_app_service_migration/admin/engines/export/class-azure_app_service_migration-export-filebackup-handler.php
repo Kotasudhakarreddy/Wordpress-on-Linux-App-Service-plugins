@@ -53,7 +53,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
 
     private function getZipFilePath($wp_root_path, $zipFileName)
     {
-        return $wp_root_path . '/wp-content/plugins/azure-app-service-migration-plugin/' . $zipFileName;
+        return $wp_root_path . '/wp-content/plugins/azure_app_service_migration/' . $zipFileName;
     }
 
     private function getExcludedFolders($dontexptsmedialibrary, $dontexptsthems, $dontexptmustuseplugins, $dontexptplugins)
@@ -78,7 +78,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
     {
         try {
             $File_Name = $_SERVER['HTTP_HOST'];
-            $iterator = new DirectoryIterator($wp_root_path . '/wp-content/plugins/azure-app-service-migration-plugin/');
+            $iterator = new DirectoryIterator($wp_root_path . '/wp-content/plugins/azure_app_service_migration/');
             foreach ($iterator as $file) {
                 if ($file->isFile() && strpos($file->getFilename(), $File_Name) === 0 && pathinfo($file->getFilename(), PATHINFO_EXTENSION) === 'zip') {
                     $filePath = $file->getPathname();

@@ -19,8 +19,8 @@
     <div id="exportdownloadfile">
         <?php
         $wp_root_url = get_home_url();
-        $wp_root_filepath = $wp_root_url . "/wp-content/plugins/azure-app-service-migration-plugin/";
-        $src = $wp_root_url . "/wp-content/plugins/azure-app-service-migration-plugin/assets/node_modules/@fluentui/web-components/dist/web-components.js";
+        $wp_root_filepath = $wp_root_url . "/wp-content/plugins/azure_app_service_migration/";
+        $src = $wp_root_url . "/wp-content/plugins/azure_app_service_migration/assets/node_modules/@fluentui/web-components/dist/web-components.js";
         ?>
     </div>
 </div>
