@@ -24,7 +24,7 @@ class Azure_app_service_migration_Import_Content {
 		// create extractor object for import zip file
 		$archive = new AASM_Zip_Extractor( $this->import_zip_path );
         
-        $files_to_exclude = array_keys( _get_dropins() );
+        $files_to_exclude = $this->get_dropins();
         $files_to_exclude = array_merge(
             $files_to_exclude,
             array(
@@ -105,5 +105,17 @@ class Azure_app_service_migration_Import_Content {
                 }
             }
         }
+    }
+
+    // Returns essential WordPress files stored in wp-content/
+    private function get_dropins()
+    {
+        $dropins = array_keys( _get_dropins() );
+        
+        for ( $i = 0; $i < count( $dropins ); $i++ ) {
+            $dropins[$i] = 'wp-content' . DIRECTORY_SEPARATOR . $dropins[$i];
+        }
+        
+        return $dropins;
     }
 }
