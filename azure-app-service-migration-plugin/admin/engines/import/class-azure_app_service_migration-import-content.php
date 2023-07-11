@@ -34,7 +34,7 @@ class Azure_app_service_migration_Import_Content {
         );
 
         // exclude extracting to w3 total cache plugin if retain AFD/CDN/BlobStorage enabled
-        if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
+        if ( isset( $this->params['retain_w3tc_config'] ) && $this->params['retain_w3tc_config'] === true ) {
 			$files_to_exclude = array_merge(
                 $files_to_exclude,
                 array(
@@ -55,10 +55,10 @@ class Azure_app_service_migration_Import_Content {
         }
 
         // upload all files in wp-content/uploads/ folder to blob storage (if enabled)
-        $this->upload_to_blob_storage($params);
+        $this->upload_to_blob_storage($this->params);
 
         // delete cache files produced by w3tc plugin
-        if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
+        if ( isset( $this->params['retain_w3tc_config'] ) && $this->params['retain_w3tc_config'] === true ) {
             $this->delete_w3tc_cache_files();
         }
     }
@@ -89,7 +89,7 @@ class Azure_app_service_migration_Import_Content {
 
             $zip = zip_open($this->import_zip_path);
             while ($zip_entry = zip_read($zip)) {
-                $filename = $this->replace_forward_slash_with_directory_separator(zip_entry_name($zip_entry));
+                $filename = AASM_Common_Utils::replace_forward_slash_with_directory_separator(zip_entry_name($zip_entry));
 
                 // Remove AASM_IMPORT_ZIP_FILE_NAME prefix from $filename
                 $prefix = AASM_IMPORT_ZIP_FILE_NAME . DIRECTORY_SEPARATOR;
@@ -100,8 +100,8 @@ class Azure_app_service_migration_Import_Content {
                 $absolutePath = ABSPATH . $filename;
 
                 // Upload file to blob storage if it belongs to uploads folder and exists
-                if (str_starts_with($filename, AASM_UPLOADS_FOLDER_PATH) && file_exists($absolutePath)) {
-                    $blob_storage_client->upload_file($filename, $blob_storage_settings['blob_container']);
+                if (str_starts_with($absolutePath, AASM_UPLOADS_FOLDER_PATH) && file_exists($absolutePath)) {
+                    $blob_storage_client->upload_file($absolutePath, $blob_storage_settings['blob_container']);
                 }
             }
         }

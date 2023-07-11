@@ -48,7 +48,7 @@ class AASM_Zip_Extractor {
                 // determine if this file needs to be skipped
                 $should_exclude_file = false;
                 for ( $i = 0; $i < count( $files_to_exclude ); $i++ ) {
-                    if ( str_starts_with( $path_file , $this->replace_forward_slash_with_directory_separator( $files_to_exclude[ $i ] ) . DIRECTORY_SEPARATOR )) {
+                    if ( str_starts_with( $filename , $this->replace_forward_slash_with_directory_separator( $files_to_exclude[ $i ] ) )) {
                         $should_exclude_file = true;
                         break;
                     }

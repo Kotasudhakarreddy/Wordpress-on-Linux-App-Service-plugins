@@ -55,4 +55,8 @@ class AASM_Common_Utils {
             }
         }
     }
+
+    public static function replace_forward_slash_with_directory_separator ( $dir ) {
+        return str_replace("/", DIRECTORY_SEPARATOR, $dir);
+    }
 }
