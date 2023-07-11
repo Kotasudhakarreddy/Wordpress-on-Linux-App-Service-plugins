@@ -28,7 +28,7 @@ class Azure_app_service_migration_Custom_Logger
     public static function writeToLog($message)
     {
         // Define the log file path and name
-        $log_file = WP_PLUGIN_DIR .'/azure-app-service-migration-plugin' . '/azure_app_service_migration-plugin-log.txt';
+        $log_file = WP_PLUGIN_DIR .'/azure_app_service_migration' . '/azure_app_service_migration-plugin-log.txt';
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
 
