@@ -103,6 +103,11 @@ class Azure_app_service_migration
     {
 
         /**
+         * Load all vendor (3rd party) libraries (azure blob storage)
+         */
+        require_once plugin_dir_path(dirname(__FILE__)) . "vendor/autoload.php"; 
+
+        /**
          * The class responsible for orchestrating the actions and filters of the
          * core plugin.
          */
@@ -152,12 +157,12 @@ class Azure_app_service_migration
         /**
         +        * The class responsible for defining actions for zip encryption.
         +        */
-        +require_once plugin_dir_path(dirname(__FILE__)) . 'admin/engines/import/class-azure_app_service_migration-import-database.php';
+        +require_once plugin_dir_path(dirname(__FILE__)) . 'admin/engines/import/class-decrypt_zip_file.php';
 
         /**
         +        * The class responsible for defining actions for blob storage.
         +        */
-        +require_once plugin_dir_path(dirname(__FILE__)) . 'admin/engines/import/class-blob_storage.php';
+        +require_once plugin_dir_path(dirname(__FILE__)) . 'admin/engines/import/class-blob_storage_client.php';
         /**
          * The class responsible for handling the import ajax calls
          */
