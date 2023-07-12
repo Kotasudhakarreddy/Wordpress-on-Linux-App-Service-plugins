@@ -64,7 +64,7 @@ class Azure_app_service_migration_Custom_Logger
     {
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
-        $error_message = "Error [{$current_time}]: {$serverity} {$message} in {$file} on line {$line}";
+        $error_message = "Error [{$current_time}]: {$severity} {$message} in {$file} on line {$line}";
         self::writeToLog($error_message);
     }
 
