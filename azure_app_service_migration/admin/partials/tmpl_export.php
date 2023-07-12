@@ -25,8 +25,7 @@
 $wp_root_url = get_home_url();
 $wp_root_filepath = $wp_root_url . "/wp-content/plugins/azure_app_service_migration/";
 
-$wp_root_path = get_home_path();
-$dirname = $wp_root_path . "/wp-content/plugins/azure_app_service_migration/";
+$dirname = AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH;
 
 $reportfiles = scandir($dirname, 1);
 foreach ($reportfiles as $file) {

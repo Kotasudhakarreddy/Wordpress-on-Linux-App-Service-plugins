@@ -3,136 +3,120 @@
 class Azure_app_service_migration_Import_FileBackupHandler
 {
     public function __construct()
-    {        // Add filter to modify the default file upload limit
-        add_filter('upload_size_limit', array($this, 'set_upload_file_limit'));
-    }
-
-    public function set_upload_file_limit($limit)
     {
-        // Set the default file upload limit to 128MB
-        $default_limit = 1 * 1024 * 1024; // 128MB
-
-        return $default_limit;
     }
+    
+    public function handle_upload_chunk()
+    {        
+        $param = isset($_POST['param']) ? $_POST['param'] : "";
 
-    public function handle_wp_fileImport()
-    {
-        $param = isset($_REQUEST['param']) ? $_REQUEST['param'] : "";
+        if (!empty($param) && $param === "wp_ImportFile_chunks") {
+            $fileChunk = $_FILES['fileChunk'];            
+            $uploadDir = AASM_IMPORT_ZIP_LOCATION;
+            // Create the directory if it doesn't exist
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+                // Set appropriate permissions for the directory (0777 allows read, write, and execute permissions for everyone)
+            }
 
-        if (!empty($param) && $param == "wp_ImportFile") {
-            if (isset($_FILES['importFile'])) {
-                $file = $_FILES['importFile'];
+            // Generate a unique filename for the chunk
+            $chunkFilename = $uploadDir . uniqid('chunk_');
+            // print_r($chunkFilename);
 
-                // Check for errors during file upload
-                if ($file['error'] !== UPLOAD_ERR_OK) {
-                    $error_message = $this->get_upload_error_message($file['error']);
-                    echo json_encode(array(
-                        "status" => 0,
-                        "message" => $error_message,
-                    ));
-                    return;
-                }
+            // Move the uploaded chunk file to the upload directory
+            if (move_uploaded_file($fileChunk['tmp_name'], $chunkFilename)) {
+                // Chunk uploaded successfully, perform further processing if needed
 
-                // Specify the desired folder path
-                $wp_root_path = get_home_path();
-                $folderPath = $wp_root_path . 'wp-content/plugins/azure_app_service_migration/ImportedFile';
-
-                // Create the folder if it doesn't exist
-                if (!is_dir($folderPath)) {
-                    mkdir($folderPath, 0755, true);
-                }
-
-                // Generate a unique filename
-                $filename = $file['name'];
-
-                // The temporary location of the uploaded file
-                $tmpFile = $file['tmp_name'];
-
-                // The final destination path
-                $destinationPath = $folderPath . '/' . $filename;
-
-                // Check if the uploaded file is a zip file
-                $fileType = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-                if ($fileType !== 'zip') {
-                    echo json_encode(array(
-                        "status" => 0,
-                        "message" => "Only ZIP files are allowed.",
-                    ));
-                    return;
-                }
-
-                // Copy the file to the specified destination path
-                if (move_uploaded_file($tmpFile, $destinationPath)) {
-                    // File successfully copied
-                    echo json_encode(array(
-                        "status" => 1,
-                        "message" => "File successfully copied.",
-                    ));
-                } else {
-                    // Failed to copy the file
-                    echo json_encode(array(
-                        "status" => 0,
-                        "message" => "Failed to copy the file.",
-                    ));
-                }
+                // Send a success response
+                echo 'Chunk uploaded successfully!';
+            } else {
+                // Error handling if failed to move the chunk file
+                http_response_code(500);
+                echo 'Failed to upload chunk.';
             }
         } else {
-            // Invalid request parameters
-            echo json_encode(array(
-                "status" => 0,
-                "message" => "Invalid request parameters.",
-            ));
+            // Send an error response
+            http_response_code(400);
+            echo 'Invalid action parameter.';
         }
 
-        $error_message = 'An error occurred during the backup process.';
-        $plugin_log_file = plugin_dir_path(dirname(__FILE__)) . 'debug.log';
-        error_log($error_message, 3, $plugin_log_file);
+        wp_die(); // Terminate the request
     }
 
-    public function get_upload_error_message($error_code)
+    public function handle_combine_chunks()
     {
-        switch ($error_code) {
-            case UPLOAD_ERR_INI_SIZE:
-                return "The uploaded file exceeds the upload_max_filesize directive in php.ini.";
-            case UPLOAD_ERR_FORM_SIZE:
-                return "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.";
-            case UPLOAD_ERR_PARTIAL:
-                return "The uploaded file was only partially uploaded.";
-            case UPLOAD_ERR_NO_FILE:
-                return "No file was uploaded.";
-            case UPLOAD_ERR_NO_TMP_DIR:
-                return "Missing a temporary folder.";
-            case UPLOAD_ERR_CANT_WRITE:
-                return "Failed to write file to disk.";
-            case UPLOAD_ERR_EXTENSION:
-                return "A PHP extension stopped the file upload.";
-            default:
-                return "Unknown error occurred during file upload.";
-        }
-    }
+        $param = isset($_POST['param']) ? $_POST['param'] : "";
 
-    private function deleteExistingZipFiles($folderPath)
-    {
-        try {
-            if (file_exists($folderPath) && is_dir($folderPath)) {
-                $fileList = scandir($folderPath);
-                foreach ($fileList as $file) {
-                    if ($file != '.' && $file != '..') {
-                        $filePath = $folderPath . '/' . $file;
-                        if (is_file($filePath)) {
-                            if (!unlink($filePath)) {
-                                // Unable to delete file
-                                error_log('Unable to delete file: ' . $filePath);
-                            }
+        if (!empty($param) && $param === "wp_ImportFile") {
+            // Handle the combine chunks action here
+           $uploadDir = AASM_IMPORT_ZIP_LOCATION;
+           $chunkPrefix = 'chunk_';
+           $originalFilename = 'importfile.zip'; // Adjust the original file name
+
+            // Remove the file if it already exists
+            $filePath = $uploadDir . $originalFilename;
+            if (file_exists($filePath) && is_file($filePath)) {
+                unlink($filePath);
+            }
+
+            // Get all chunk files in the upload directory
+            $chunkFiles = glob($uploadDir . $chunkPrefix . '*');
+
+            if (!empty($chunkFiles)) {
+                // Sort the chunk files by their names
+                natsort($chunkFiles);
+
+                // Create the original file
+                $originalFilePath = $uploadDir . $originalFilename;
+
+                // Open the original file in append mode
+                $originalFile = fopen($originalFilePath, 'ab');
+
+                if ($originalFile !== false) {
+                    // Loop through the chunk files and append their contents to the original file
+                    foreach ($chunkFiles as $chunkFile) {
+                        $chunkContent = file_get_contents($chunkFile);
+
+                        if ($chunkContent !== false) {
+                            // Write the chunk content to the original file
+                            fwrite($originalFile, $chunkContent);
+
+                            // Delete the chunk file after combining
+                            unlink($chunkFile);
+                        } else {
+                            // Error handling if failed to read chunk content
+                            http_response_code(500);
+                            echo 'Failed to read chunk file: ' . $chunkFile;
+                            fclose($originalFile);
+                            return;
                         }
                     }
+
+                    // Close the original file
+                    fclose($originalFile);
+
+                    // Perform any further actions after combining the chunks
+                    // ...
+
+                    // Send a success response
+                    echo 'Chunks combined successfully!';
+                } else {
+                    // Error handling if failed to open the original file
+                    http_response_code(500);
+                    echo 'Failed to open the original file: ' . $originalFilePath;
                 }
             } else {
-                echo "Folder does not exist or is not a directory.";
+                // Error handling if no chunk files found
+                http_response_code(400);
+                echo 'No chunk files found.';
             }
-        } catch (Exception $e) {
-            throw new AASM_File_Delete_Exception('File Delete error:' . $e->getMessage());
+        } else {
+            // Send an error response
+            http_response_code(400);
+            echo 'Invalid action parameter.';
         }
+
+        wp_die(); // Terminate the request
     }
 
 }

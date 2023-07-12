@@ -16,12 +16,10 @@ class Azure_app_service_migration_Export_FileBackupHandler
                 $dontdbsql = isset($_REQUEST['donotdbsql']) ? $_REQUEST['donotdbsql'] : "";
 
                 $zipFileName = $this->generateZipFileName();
-                $wp_root_path = get_home_path();
-                $zipFilePath = $this->getZipFilePath($wp_root_path, $zipFileName);
+                $zipFilePath = $this->getZipFilePath($zipFileName);
                 $excludedFolders = $this->getExcludedFolders($dontexptsmedialibrary, $dontexptsthems, $dontexptmustuseplugins, $dontexptplugins);
 
-                //$this->deleteExistingZipFiles($wp_root_path, $zipFileName);
-                $this->deleteExistingZipFiles($wp_root_path, $zipFileName);
+                $this->deleteExistingZipFiles();
                 $zipCreated = $this->createZipArchive($zipFilePath, $excludedFolders, $dontdbsql, $password, $dontexptpostrevisions);
 
                 if ($zipCreated) {
@@ -39,7 +37,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
         }
 
         $error_message = 'An error occurred during the backup process.';
-        $plugin_log_file = plugin_dir_path( dirname( __FILE__ ) ) . 'debug.log';
+        $plugin_log_file = plugin_dir_path(dirname(__FILE__)) . 'debug.log';
         error_log($error_message, 3, $plugin_log_file);
 
     }
@@ -51,9 +49,9 @@ class Azure_app_service_migration_Export_FileBackupHandler
         return $File_Name . '_' . $datetime . '.zip';
     }
 
-    private function getZipFilePath($wp_root_path, $zipFileName)
+    private function getZipFilePath($zipFileName)
     {
-        return $wp_root_path . '/wp-content/plugins/azure_app_service_migration/' . $zipFileName;
+        return AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . $zipFileName;
     }
 
     private function getExcludedFolders($dontexptsmedialibrary, $dontexptsthems, $dontexptmustuseplugins, $dontexptplugins)
@@ -74,11 +72,11 @@ class Azure_app_service_migration_Export_FileBackupHandler
         return $excludedFolders;
     }
 
-    private function deleteExistingZipFiles($wp_root_path)
+    private function deleteExistingZipFiles()
     {
         try {
             $File_Name = $_SERVER['HTTP_HOST'];
-            $iterator = new DirectoryIterator($wp_root_path . '/wp-content/plugins/azure_app_service_migration/');
+            $iterator = new DirectoryIterator(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH);
             foreach ($iterator as $file) {
                 if ($file->isFile() && strpos($file->getFilename(), $File_Name) === 0 && pathinfo($file->getFilename(), PATHINFO_EXTENSION) === 'zip') {
                     $filePath = $file->getPathname();

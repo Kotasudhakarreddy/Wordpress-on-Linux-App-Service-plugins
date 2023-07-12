@@ -21,6 +21,8 @@ define( 'AASM_IMPORT_ZIP_FILE_NAME', 'importfile' );
 // ================
 // = Import Zip File Storage Path =
 // ================
+define( 'AASM_IMPORT_ZIP_LOCATION', substr(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH, 0, -1) . DIRECTORY_SEPARATOR . 
+                                    'ImportedFile' . DIRECTORY_SEPARATOR);
 define( 'AASM_IMPORT_ZIP_PATH', AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . 
                                 'storage' . DIRECTORY_SEPARATOR . 
                                 'import' . DIRECTORY_SEPARATOR .

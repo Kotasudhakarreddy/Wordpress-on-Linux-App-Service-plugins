@@ -243,6 +243,19 @@ class Azure_app_service_migration
         $ajaxHandler = new Azure_app_service_migration_Export_AjaxHandler();
         $this->loader->add_action('wp_ajax_admin_ajax_request', $ajaxHandler, 'handle_ajax_requests_admin');
 
+        $importaxHandler = new Azure_app_service_migration_Import_FileBackupHandler();
+        // Add the action for authenticated users
+        $this->loader->add_action('wp_ajax_handle_upload_chunk', $importaxHandler , 'handle_upload_chunk');
+        
+        // Add the action for non-authenticated users
+        $this->loader->add_action('wp_ajax_nopriv_handle_upload_chunk', $importaxHandler , 'handle_upload_chunk');
+
+        // Add the action for authenticated users
+        $this->loader->add_action('wp_ajax_handle_combine_chunks', $importaxHandler , 'handle_combine_chunks');
+        
+        // Add the action for non-authenticated users
+        $this->loader->add_action('wp_ajax_nopriv_handle_combine_chunks', $importaxHandler , 'handle_combine_chunks');
+
     }
 
     /**
