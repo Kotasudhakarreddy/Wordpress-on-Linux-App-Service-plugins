@@ -65,8 +65,9 @@ class Azure_app_service_migration_Import_Database {
         }
 
         $files = scandir($this->db_temp_dir);
-
-        // import each table (stored as sql file)
+        $table_records_files = [];
+        
+        // import table structure and keep track of table records to be imported later
         foreach ($files as $file) {
 
             // Exclude current directory (.) and parent directory (..)
@@ -74,10 +75,20 @@ class Azure_app_service_migration_Import_Database {
                 $filePath = $this->db_temp_dir . $file;
 
                 // Check if the path is a file
-                if (is_file($filePath) && str_ends_with($filePath, '.sql')) {
+                if (is_file($filePath) && str_ends_with($filePath, 'structure.sql')) {
                     $this->database_manager->import_sql_file($this->new_database_name, $filePath);
                 }
+                else if (is_file($filePath) && strpos($filePath, 'records_batch' !== false))
+                {
+                    $table_records_files[] = $filePath;
+                }
             }
+        }
+        
+        // Import table records
+        foreach ($table_records_files as $table_records)
+        {
+            $this->database_manager->import_sql_file($this->new_database_name, $table_records);
         }
     }
 
@@ -93,7 +104,6 @@ class Azure_app_service_migration_Import_Database {
 
         // Run the import query on the destination database
         $this->database_manager->run_query($destinationDatabase, $importQuery);
-
     }
 
     public function generate_w3tc_import_query($databaseName, $w3tc_options) {
