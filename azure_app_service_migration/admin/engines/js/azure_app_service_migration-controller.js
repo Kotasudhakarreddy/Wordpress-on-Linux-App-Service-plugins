@@ -14,18 +14,21 @@ jQuery(function ($) {
 	// Ajax call before function
 	function pagebeforeloadresonse() {
 		$("#downloadfile").hide();
-		$("body").addClass("loading");
+		//$("body").addClass("loading");
 		$("#blinkdata").show();
 	}
 
 	// Processing event on button click
 	$("#generatefile").click(function () {
+
+		// Disable the button and change text to indicate processing
+		$(this).prop('disabled', true).text('Generating Export...');
+
 		// Form submission
-		pagebeforeloadresonse();
 		var postdata = $("#frm-chkbox-data").serialize();
 		postdata += "&action=admin_ajax_request&param=wp_filebackup";
-		jQuery.post(ajaxurl, postdata, function (response) {
-			var data = jQuery.parseJSON(response);
+		$.post(ajaxurl, postdata, function (response) {
+			var data = $.parseJSON(response);
 			console.log(response);
 			if (data.status == 1) {
 				alert(data.message);
@@ -33,8 +36,18 @@ jQuery(function ($) {
 			} else {
 				alert(data.message);
 			}
+
+			// Enable the button and restore original text
+			// $("#generatefile").prop('disabled', false).text('Generate Export File');
+		}).always(function() {
+			// Enable the button and restore original text
+			$("#generatefile").prop('disabled', false).text('Generate Export File');
+		}).fail(function() {
+			// Enable the button and restore original text on error
+			$("#generatefile").prop('disabled', false).text('Generate Export File');
 		});
 	});
+
 
 	// Add event listeners for drag and drop functionality
 	$("#dropzone").on('dragover', function (e) {
@@ -55,59 +68,7 @@ jQuery(function ($) {
 			// Assign the dropped file to the file input
 			$("#importFile")[0].files = files;
 		}
-	});
-
-	// Handle the button click event
-	$("#importfile").click(function (e) {
-		$("#filestatus").empty();
-		e.preventDefault(); // Prevent the default form submission
-		var importButton = document.getElementById('importfile');
-		var fileInput = document.getElementById('importFile');
-		var fileInfo = document.getElementById('fileInfo');
-		var originalText = importButton.textContent; // Store the original text
-
-		importButton.disabled = true; // Disable the button before the AJAX request
-		importButton.textContent = "Importing..."; // Change the button text during import
-
-		var formData = new FormData($("#frm-Import-file")[0]);
-		formData.append("action", "admin_ajax_request");
-		formData.append("param", "wp_ImportFile");
-
-		$.ajax({
-			url: ajaxurl,
-			type: "POST",
-			data: formData,
-			processData: false,
-			contentType: false,
-			beforeSend: function () {
-				importButton.disabled = true; // Disable the button before sending the request
-				importButton.textContent = "Importing..."; // Change the button text during import
-			},
-			success: function (response) {
-				var data = JSON.parse(response);
-				if (data.status == 1) {
-					$("#filestatus").html(data.message).removeClass("text-danger").addClass("text-success").css({
-						"color": "green",
-						"font-weight": "bold",
-						"margin-bottom": "1em"
-					});
-				} else {
-					$("#filestatus").html(data.message).removeClass("text-success").addClass("text-danger").css({
-						"color": "red",
-						"font-weight": "bold",
-						"margin-bottom": "1em"
-					});
-				}
-
-			},
-			complete: function () {
-				importButton.disabled = false; // Enable the button after the request is completed
-				importButton.textContent = originalText; // Change the button text back to the original
-				fileInput.value = ''; // Clear the file input
-				fileInfo.textContent = "Drag and drop files here or click to select files."; // Reset the drop area text
-			}
-		});
-	});
+	});	
 
 	$("#confpassword").on('keyup', function () {
 		var password = $("#password").val();
