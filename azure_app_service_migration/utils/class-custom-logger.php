@@ -26,7 +26,7 @@ class Azure_app_service_migration_Custom_Logger
 
     // Write log messages to the custom log file
     // parameters: service_type = {IMPORT/EXPORT}
-    public static function writeToLog($message, $service_type, $status)
+    public static function writeToLog($status, $message = '', $service_type = '')
     {
         // Define the log file path and name
         $log_file = WP_PLUGIN_DIR .'/azure_app_service_migration' . '/azure_app_service_migration-plugin-log.txt';
