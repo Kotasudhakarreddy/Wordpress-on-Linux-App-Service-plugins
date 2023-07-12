@@ -25,7 +25,8 @@ class Azure_app_service_migration_Custom_Logger
     }
 
     // Write log messages to the custom log file
-    public static function writeToLog($message)
+    // parameters: service_type = {IMPORT/EXPORT}
+    public static function writeToLog($message, $service_type, $status)
     {
         // Define the log file path and name
         $log_file = WP_PLUGIN_DIR .'/azure_app_service_migration' . '/azure_app_service_migration-plugin-log.txt';
@@ -33,7 +34,7 @@ class Azure_app_service_migration_Custom_Logger
         $current_time = date('Y-m-d H:i:s');
 
         // Format the log message
-        $log_message = "[{$current_time}] {$message}" . PHP_EOL;
+        $log_message = "[{$current_time}] {$service_type} {$status} {$message}" . PHP_EOL;
 
         // Append the log message to the log file
         file_put_contents($log_file, $log_message, FILE_APPEND);
@@ -61,7 +62,9 @@ class Azure_app_service_migration_Custom_Logger
     // Custom error handler
     public static function handleError($severity, $message, $file, $line)
     {
-        $error_message = "Error [{$severity}]: {$message} in {$file} on line {$line}";
+        // Get the current date and time
+        $current_time = date('Y-m-d H:i:s');
+        $error_message = "Error [{$current_time}]: {$severity} {$message} in {$file} on line {$line}";
         self::writeToLog($error_message);
     }
 
@@ -69,7 +72,7 @@ class Azure_app_service_migration_Custom_Logger
     public static function handleException($exception)
     {
         // Get the exception details
-        $message = 'Uncaught Exception: ' . $exception->getMessage();
+        $message = 'Exception: ' . $exception->getMessage();
         $file = $exception->getFile();
         $line = $exception->getLine();
         $trace = $exception->getTraceAsString();
