@@ -11,11 +11,8 @@
         <button type="button" class="btn btn-primary" id="importfile" onclick="handleImport()">Import</button>
       </div>
     </form>
-    <!-- <div class="progress">
-      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-    </div> -->
     <div style="margin-top: 20px;">
-      <input type="checkbox" name="caching_cdn" id="caching_cdn" style="margin-right: 8px; transform: scale(0.8);">
+      <input type="checkbox" name="caching_cdn" id="caching_cdn" value="caching_cdn" style="margin-right: 8px; transform: scale(0.8);">
       <label for="caching_cdn" style="font-size: 14px;">Re-enable caching and/or CDN/AFD features</label>
     </div>
   </div>
@@ -101,12 +98,16 @@
               // console.log('chunk length', chunks.length);
         if (index >= chunks.length) {
             // Perform further actions after all chunks are uploaded
+            // Get the checkbox element
+            var cachingCdnCheckbox = document.getElementById('caching_cdn');
+                      
             $.ajax({
             url: ajaxurl,
             type: 'POST',
             data: {
                 action: 'handle_combine_chunks', // Adjust the server-side action name
-                param: 'wp_ImportFile'
+                param: 'wp_ImportFile',
+                caching_cdn: cachingCdnCheckbox.checked,
             },
             success: function (response) {
                 // Handle the success response after combining the chunks
@@ -121,7 +122,7 @@
             });
             return;
         }
-        
+
         var chunk = chunks[index];
         formData.set('fileChunk', chunk);
         formData.append("action", "handle_upload_chunk");

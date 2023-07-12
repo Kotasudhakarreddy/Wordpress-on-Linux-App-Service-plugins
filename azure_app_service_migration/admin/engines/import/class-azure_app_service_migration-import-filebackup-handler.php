@@ -5,13 +5,13 @@ class Azure_app_service_migration_Import_FileBackupHandler
     public function __construct()
     {
     }
-    
+
     public function handle_upload_chunk()
-    {        
+    {
         $param = isset($_POST['param']) ? $_POST['param'] : "";
 
         if (!empty($param) && $param === "wp_ImportFile_chunks") {
-            $fileChunk = $_FILES['fileChunk'];            
+            $fileChunk = $_FILES['fileChunk'];
             $uploadDir = AASM_IMPORT_ZIP_LOCATION;
             // Create the directory if it doesn't exist
             if (!is_dir($uploadDir)) {
@@ -46,12 +46,14 @@ class Azure_app_service_migration_Import_FileBackupHandler
     public function handle_combine_chunks()
     {
         $param = isset($_POST['param']) ? $_POST['param'] : "";
+        $cachingCdnValue = isset($_POST['caching_cdn']) ? $_POST['caching_cdn'] : "";
 
-        if (!empty($param) && $param === "wp_ImportFile") {
+        if (!empty($param) && $param === "wp_ImportFile") {            
+
             // Handle the combine chunks action here
-           $uploadDir = AASM_IMPORT_ZIP_LOCATION;
-           $chunkPrefix = 'chunk_';
-           $originalFilename = 'importfile.zip'; // Adjust the original file name
+            $uploadDir = AASM_IMPORT_ZIP_LOCATION;
+            $chunkPrefix = 'chunk_';
+            $originalFilename = 'importfile.zip'; // Adjust the original file name
 
             // Remove the file if it already exists
             $filePath = $uploadDir . $originalFilename;
@@ -96,7 +98,17 @@ class Azure_app_service_migration_Import_FileBackupHandler
                     fclose($originalFile);
 
                     // Perform any further actions after combining the chunks
-                    // ...
+
+                    // Create the $params array and assign the value of $cachingCdnValue
+                    $params = array(
+                        'caching_cdn' => $cachingCdnValue,
+                    );
+
+                    // Instantiate the Azure_app_service_migration_Import_Controller class
+                    $importController = new Azure_app_service_migration_Import_Controller();
+
+                    // Call the import() method and pass the $params variable
+                    $importController->import($params);
 
                     // Send a success response
                     echo 'Chunks combined successfully!';
