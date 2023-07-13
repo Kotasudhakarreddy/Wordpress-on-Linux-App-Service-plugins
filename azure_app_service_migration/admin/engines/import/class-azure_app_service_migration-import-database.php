@@ -25,7 +25,7 @@ class Azure_app_service_migration_Import_Database {
         $this->params = $params;
         $this->db_temp_dir = AASM_DATABASE_TEMP_DIR;            // Temporary directory for extracting sql files
         $this->import_zip_path = ($import_zip_path === null)    // Path to the uploaded import zip file
-                                ? AASM_IMPORT_ZIP_PATH
+                                ? AASM_IMPORT_ZIP_LOCATION
                                 : $import_zip_path;
     }
 

@@ -7,7 +7,7 @@ class Azure_app_service_migration_Import_Content {
     public function __construct( $import_zip_path, $params ) {
         // Path to the uploaded import zip file
         $this->import_zip_path = ($import_zip_path === null) 
-                                ? AASM_IMPORT_ZIP_PATH
+                                ? AASM_IMPORT_ZIP_LOCATION
                                 : $import_zip_path;
         $this->params = $params;
     }

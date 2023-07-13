@@ -104,7 +104,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
                         'caching_cdn' => $cachingCdnValue,
                     );
                     // Call the import() method and pass the $params variable
-                    Azure_app_service_migration_Import_Controller::import($params);
+                    Azure_app_service_migration_Import_Controller::import($params, $filePath);
 
                     // Send a success response
                     echo 'Chunks combined successfully!';
