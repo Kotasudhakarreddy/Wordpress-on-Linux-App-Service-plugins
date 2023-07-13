@@ -126,17 +126,13 @@ class Azure_app_service_migration_Import_FileBackupHandler
                 // Update the counter file with the value 0
                 file_put_contents($counterFilePath, '-1');
                 // Perform any further actions after combining the chunks
-
+                
                 // Create the $params array and assign the value of $cachingCdnValue
                 $params = array(
                     'caching_cdn' => $cachingCdnValue,
                 );
-
-                // Instantiate the Azure_app_service_migration_Import_Controller class
-                $importController = new Azure_app_service_migration_Import_Controller();
-
                 // Call the import() method and pass the $params variable
-                $importController->import($params);
+                Azure_app_service_migration_Import_Controller::import($params, $filePath);
 
                 // Send a success response
                 echo 'Chunks combined successfully!';
