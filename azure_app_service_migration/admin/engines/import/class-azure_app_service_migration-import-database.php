@@ -21,7 +21,7 @@ class Azure_app_service_migration_Import_Database {
 
         $this->database_manager = new AASM_Database_Manager();
         $this->old_database_name = $wpdb->$dbname;
-        $this->new_database_name = $this->generate_database_name($dbname, $this->database_manager);
+        $this->new_database_name = $this->generate_unique_database_name($dbname, $this->database_manager);
         $this->params = $params;
         $this->db_temp_dir = AASM_DATABASE_TEMP_DIR;            // Temporary directory for extracting sql files
         $this->import_zip_path = ($import_zip_path === null)    // Path to the uploaded import zip file
@@ -50,7 +50,7 @@ class Azure_app_service_migration_Import_Database {
         $this->import_db_sql_files();
 
         // update DB_NAME constant in wp-config
-        AASM_Common_Utils::update_dbname_wp_config($this->new_database_name);
+        $this->update_dbname_wp_config($this->new_database_name);
         
         // imports w3tc options from original DB to new DB
         if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
@@ -129,9 +129,33 @@ class Azure_app_service_migration_Import_Database {
         return $importQuery;
     }
 
+    // This function updates DB_NAME constant in wp-config.php file
+    public static function update_dbname_wp_config($new_db_name) {
+        // Path to the wp-config.php file
+        $config_file_path = ABSPATH . 'wp-config.php';
+        
+        // To Do: Debug the commented method
+        // swap database names
+        //$temp_database_name = $this->generate_unique_database_name();
+        //$this->database_manager->rename_database($this->old_database_name, $temp_database_name);
+        //$this->database_manager->rename_database($this->new_database_name, $this->old_database_name);
+        // Read the contents of the wp-config.php file
+
+        $config_file_contents = file_get_contents($config_file_path);
+    
+        // Replace the existing database_name value with the new one
+        $updated_file_contents = preg_replace(
+            "/define\(\'DB_NAME\', (.*)\);/",
+            "define('DB_NAME', '" . $new_db_name . "');",
+            $config_file_contents
+        );
+    
+        // Write the updated contents back to the wp-config.php file
+        file_put_contents($config_file_path, $updated_file_contents);
+    }
 
     // Generates a unique database name. Retries 5 times
-    private function generate_database_name($current_dbname, $database_manager) {
+    private function generate_unique_database_name($current_dbname, $database_manager) {
         $new_dbname = 'aasm_db';
 
         for ($trycount = 0; $trycount < 5; $trycount++) {

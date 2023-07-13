@@ -32,31 +32,8 @@ class AASM_Database_Manager {
     public function import_sql_file($databaseName, $sqlFilePath) {
         global $wpdb;
         $wpdb->select($databaseName);
-
-        // Temporary variable, used to store current query
-        $templine = '';
-        // Read in entire file
-        $lines = file($sqlFilePath);
-        // Loop through each line
-        
-        foreach ($lines as $index => $line)
-        {
-            // Skip it if it's a comment
-            if (substr($line, 0, 2) == '--' || $line == '')
-                continue;
-
-            // Add this line to the current segment
-            $templine .= $line;
-            // If it has a semicolon at the end, it's the end of the query
-            if (substr(trim($line), -1, 1) == ';' || $index === array_key_last($lines))
-            {
-                // Perform the query
-                $wpdb->query($templine);
-                // Reset temp variable to empty
-                $templine = '';
-            }
-        }
-
+        $sql = file_get_contents($sqlFilePath); // Read in entire file
+        $wpdb->query($sql);
         return true;
     }
 
