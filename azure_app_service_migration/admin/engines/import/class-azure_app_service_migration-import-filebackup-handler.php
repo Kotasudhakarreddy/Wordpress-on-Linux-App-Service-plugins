@@ -49,7 +49,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
     private function getLatestChunkNumber($uploadDir)
     {
         $latestChunkNumber = 0;
-        $counterFilePath = $uploadDir . 'chunkfile_counter.txt';
+        $counterFilePath = $uploadDir . 'chunk_counter.txt';
 
         // Check if the counter file exists
         if (file_exists($counterFilePath)) {
