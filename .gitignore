@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Plugin specific files
+/wp-content/plugins/azure-app-service-migration-plugin/ImportedFile/chunk_counter.txt
