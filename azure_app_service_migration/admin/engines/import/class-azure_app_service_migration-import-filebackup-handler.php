@@ -4,6 +4,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
 {
     public function __construct()
     {
+        
     }
 
     public function handle_upload_chunk()
@@ -19,9 +20,11 @@ class Azure_app_service_migration_Import_FileBackupHandler
                 // Set appropriate permissions for the directory (0777 allows read, write, and execute permissions for everyone)
             }
 
-            // Generate a unique filename for the chunk
-            $chunkFilename = $uploadDir . uniqid('chunk_');
-            // print_r($chunkFilename);
+            // Get the latest chunk number in the upload directory
+            $latestChunkNumber = $this->getLatestChunkNumber($uploadDir);
+
+            // Generate the chunk filename based on the latest chunk number
+            $chunkFilename = $uploadDir . 'chunk_' . $latestChunkNumber;
 
             // Move the uploaded chunk file to the upload directory
             if (move_uploaded_file($fileChunk['tmp_name'], $chunkFilename)) {
@@ -43,6 +46,30 @@ class Azure_app_service_migration_Import_FileBackupHandler
         wp_die(); // Terminate the request
     }
 
+    private function getLatestChunkNumber($uploadDir)
+    {
+        $latestChunkNumber = 0;
+        $counterFilePath = $uploadDir . 'chunk_counter.txt';
+
+        // Check if the counter file exists
+        if (file_exists($counterFilePath)) {
+            // Read the current chunk number from the counter file
+            $currentChunkNumber = intval(file_get_contents($counterFilePath));
+
+            // Calculate the latest chunk number
+            $latestChunkNumber = $currentChunkNumber + 1;
+        } else {
+            // Create the counter file with initial value 0
+            file_put_contents($counterFilePath, '0');
+            $latestChunkNumber = 0; // Start with chunk number 1
+        }
+
+        // Update the counter file with the latest chunk number
+        file_put_contents($counterFilePath, $latestChunkNumber);
+
+        return $latestChunkNumber;
+    }   
+
     public function handle_combine_chunks()
     {
         // continue executing if client side request aborts
@@ -51,8 +78,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
         $param = isset($_POST['param']) ? $_POST['param'] : "";
         $cachingCdnValue = isset($_POST['caching_cdn']) ? $_POST['caching_cdn'] : "";
 
-        if (!empty($param) && $param === "wp_ImportFile") {            
-
+        if (!empty($param) && $param === "wp_ImportFile") {
             // Handle the combine chunks action here
             $uploadDir = AASM_IMPORT_ZIP_LOCATION;
             $chunkPrefix = 'chunk_';
@@ -106,30 +132,60 @@ class Azure_app_service_migration_Import_FileBackupHandler
                             return;
                         }
                     }
+                  
+            // Create the original file
+            $originalFilePath = $uploadDir . $originalFilename;
 
-                    // Close the original file
-                    fclose($originalFile);
+            // Open the original file in write mode
+            $originalFile = fopen($originalFilePath, 'wb');
 
-                    // Perform any further actions after combining the chunks
+            if ($originalFile !== false) {
+                $chunkIndex = 0;
+                $chunkFile = $uploadDir . $chunkPrefix . $chunkIndex;
 
-                    // Create the $params array and assign the value of $cachingCdnValue
-                    $params = array(
-                        'caching_cdn' => $cachingCdnValue,
-                    );
-                    // Call the import() method and pass the $params variable
-                    Azure_app_service_migration_Import_Controller::import($params, $filePath);
+                while (file_exists($chunkFile)) {
+                    // Read the content of the current chunk file
+                    $chunkContent = file_get_contents($chunkFile);
 
-                    // Send a success response
-                    echo 'Chunks combined successfully!';
-                } else {
-                    // Error handling if failed to open the original file
-                    http_response_code(500);
-                    echo 'Failed to open the original file: ' . $originalFilePath;
+                    if ($chunkContent !== false) {
+                        // Write the chunk content to the original file
+                        fwrite($originalFile, $chunkContent);
+
+                        // Delete the chunk file after combining
+                        unlink($chunkFile);
+                    } else {
+                        // Error handling if failed to read chunk content
+                        http_response_code(500);
+                        echo 'Failed to read chunk file: ' . $chunkFile;
+                        fclose($originalFile);
+                        return;
+                    }
+
+                    $chunkIndex++;
+                    $chunkFile = $uploadDir . $chunkPrefix . $chunkIndex;
                 }
+
+                // Close the original file
+                fclose($originalFile);
+                $counterFilePath = $uploadDir . 'chunk_counter.txt';
+
+                // Update the counter file with the value 0
+                file_put_contents($counterFilePath, '-1');
+                // Perform any further actions after combining the chunks
+                
+                // Create the $params array and assign the value of $cachingCdnValue
+                $params = array(
+                    'caching_cdn' => $cachingCdnValue,
+                );
+                // Call the import() method and pass the $params variable
+                Azure_app_service_migration_Import_Controller::import($params, $filePath);
+
+                // Send a success response
+                echo 'Chunks combined successfully!';
             } else {
-                // Error handling if no chunk files found
-                http_response_code(400);
-                echo 'No chunk files found.';
+                // Error handling if failed to open the original file
+                http_response_code(500);
+                echo 'Failed to open the original file: ' . $originalFilePath;
             }
         } else {
             // Send an error response

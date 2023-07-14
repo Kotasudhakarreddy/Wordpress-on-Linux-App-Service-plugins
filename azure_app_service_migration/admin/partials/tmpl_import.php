@@ -6,6 +6,9 @@
       <div id="dropzone" onclick="document.getElementById('importFile').click();" ondragover="handleDragOver(event);" ondragleave="handleDragLeave(event);" ondrop="handleDrop(event);" style="cursor: pointer;">
         <input type="file" name="importFile" id="importFile" style="display: none;" onchange="handleFileChange(event);">
         <p id="fileInfo">Drag and drop files here or click to select files.</p>
+        <div id="progressBarContainer" class="progress" style="display: none;">
+          <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0px;" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
       </div>
       <div style="text-align: center;">
         <button type="button" class="btn btn-primary" id="importfile" onclick="handleImport()">Import</button>
@@ -81,7 +84,6 @@
     }
 
     var formData = new FormData();
-    // formData.append('importFile', fileInput.files[0]);
     formData.append('param', 'wp_ImportFile');
 
     var file = fileInput.files[0];
@@ -90,66 +92,115 @@
 
     fileInfo.textContent = 'Importing...'; // Update the file info text
 
-    // Upload each chunk sequentially
     var index = 0;
 
-            function uploadChunk() {
-              // console.log('uploadChunk is called');
-              // console.log('chunk length', chunks.length);
-        if (index >= chunks.length) {
-            // Perform further actions after all chunks are uploaded
-            // Get the checkbox element
-            var cachingCdnCheckbox = document.getElementById('caching_cdn');
-                      
-            $.ajax({
+    function uploadChunkWithRetry() {
+      console.log('uploadChunk is called');
+      console.log('chunk length', chunks.length);
+      if (index >= chunks.length) {
+        // Perform further actions after all chunks are uploaded
+        // Get the checkbox element
+        var cachingCdnCheckbox = document.getElementById('caching_cdn');
+
+        var retries = 0;
+        var maxRetries = 3;
+        var retryDelay = 1000;
+
+        function combineChunksWithRetry() {
+          $.ajax({
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'handle_combine_chunks', // Adjust the server-side action name
-                param: 'wp_ImportFile',
-                caching_cdn: cachingCdnCheckbox.checked,
+              action: 'handle_combine_chunks', // Adjust the server-side action name
+              param: 'wp_ImportFile',
+              caching_cdn: cachingCdnCheckbox.checked,
             },
-            success: function (response) {
-                // Handle the success response after combining the chunks
-                console.log(response);
-                fileInfo.textContent = 'File imported successfully.';
+            success: function(response) {
+              // Handle the success response after combining the chunks
+              console.log(response);
+              fileInfo.textContent = 'File imported successfully.';
+              document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
             },
-            error: function (xhr, status, error) {
-                // Handle the error response after combining the chunks
-                console.log(error);
-                fileInfo.textContent = 'Failed to import file.';
+            error: function(xhr, status, error) {
+              // Handle the error response after combining the chunks
+              console.log(error);
+              fileInfo.textContent = 'Failed to import file.';
+
+              // Retry the combineChunks call if the maximum number of retries is not reached
+              if (retries < maxRetries) {
+                retries++;
+                setTimeout(combineChunksWithRetry, retryDelay);
+              } else {
+                // Max retries reached, display error message
+                fileInfo.textContent = 'Failed to import file after multiple retries.';
+                document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
+              }
             }
-            });
-            return;
+          });
         }
 
-        var chunk = chunks[index];
-        formData.set('fileChunk', chunk);
-        formData.append("action", "handle_upload_chunk");
-		formData.append("param", "wp_ImportFile_chunks");
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-            // Handle the success response
-            // console.log(response);
-            // console.log('POST');
-            // console.log('Index number:', index);
+        combineChunksWithRetry();
+        return;
+      }
 
-            // Upload the next chunk
+      var chunk = chunks[index];
+      formData.set('fileChunk', chunk);
+      formData.append("action", "handle_upload_chunk");
+      formData.append("param", "wp_ImportFile_chunks");
+
+      var retries = 0;
+      var maxRetries = 3;
+      var retryDelay = 1000;
+
+      function uploadChunk() {
+        $.ajax({
+          url: ajaxurl,
+          type: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          xhr: function() {
+            var xhr = new window.XMLHttpRequest();
+            // Upload progress
+            xhr.upload.addEventListener("progress", function(evt) {
+              if (evt.lengthComputable) {
+                var percentComplete = (index / chunks.length) * 100;
+                var progressBarWidth = Math.floor(percentComplete) + '%';
+                document.getElementById('progressBar').style.width = progressBarWidth;
+              }
+            }, false);
+            return xhr;
+          },
+          success: function(response) {
+            console.log(response);
+            console.log('POST');
+            console.log('Index number:', index);
+
             index++;
-            uploadChunk();
-            },
-            error: function (xhr, status, error) {
-            // Handle the error response
+            retries = 0; // Reset the retry counter
+            uploadChunkWithRetry();
+          },
+          error: function(xhr, status, error) {
             console.log(error);
             fileInfo.textContent = 'Failed to upload chunk.';
+
+            // Retry the upload if the maximum number of retries is not reached
+            if (retries < maxRetries) {
+              retries++;
+              setTimeout(uploadChunk, retryDelay);
+            } else {
+              // Max retries reached, display error message
+              fileInfo.textContent = 'Failed to upload chunk after multiple retries.';
+              document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
             }
+          }
         });
-        }
-            uploadChunk();
+      }
+
+      uploadChunk();
+    }
+
+    document.getElementById('progressBarContainer').style.display = 'block'; // Display the progress bar
+    uploadChunkWithRetry();
   }
 </script>
