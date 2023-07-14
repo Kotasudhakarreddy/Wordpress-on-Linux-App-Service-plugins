@@ -23,7 +23,7 @@
 <?php
 $postMaxSize = ini_get('post_max_size'); // Retrieve post_max_size value
 $trimmedSize = substr($postMaxSize, 0, -1); // Remove the last character from the string
-$reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integer and taking only 80% of the allowed size
+$reducedSize = (int) $trimmedSize * 0.3; // Convert the trimmed size to an integer and taking only 50% of the allowed size
 ?>
 <script type="text/javascript">
   function splitFile(file, chunkSize) {
@@ -91,22 +91,17 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
     formData.append('param', 'wp_ImportFile');
 
     var file = fileInput.files[0];
-    // var chunkSize = 5 * 1024 * 1024; // 5MB chunk size
-    // console.log('chunkSize: ', chunkSize);
-    var chunkSize = <?php echo $reducedSize; ?> * 1024 * 1024 ;
-    console.log('server size: ', <?php echo $reducedSize; ?> * 1024 * 1024);
+    var chunkSize = <?php echo $reducedSize; ?> * 1024 * 1024;
     var chunks = splitFile(file, chunkSize);
+    console.log('chunks', chunks);
 
     fileInfo.textContent = 'Importing...'; // Update the file info text
 
     var index = 0;
 
     function uploadChunkWithRetry() {
-      console.log('uploadChunk is called');
-      console.log('chunk length', chunks.length);
       if (index >= chunks.length) {
         // Perform further actions after all chunks are uploaded
-        // Get the checkbox element
         var cachingCdnCheckbox = document.getElementById('caching_cdn');
 
         var retries = 0;
@@ -118,29 +113,27 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
             url: ajaxurl,
             type: 'POST',
             data: {
-              action: 'handle_combine_chunks', // Adjust the server-side action name
+              action: 'handle_combine_chunks',
               param: 'wp_ImportFile',
               caching_cdn: cachingCdnCheckbox.checked,
             },
             success: function(response) {
-              // Handle the success response after combining the chunks
               console.log(response);
               fileInfo.textContent = 'File imported successfully.';
               document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
+              deleteChunks(); // Delete the chunk files
             },
             error: function(xhr, status, error) {
-              // Handle the error response after combining the chunks
               console.log(error);
               fileInfo.textContent = 'Failed to import file.';
 
-              // Retry the combineChunks call if the maximum number of retries is not reached
               if (retries < maxRetries) {
                 retries++;
                 setTimeout(combineChunksWithRetry, retryDelay);
               } else {
-                // Max retries reached, display error message
                 fileInfo.textContent = 'Failed to import file after multiple retries.';
                 document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
+                deleteChunks(); // Delete the chunk files
               }
             }
           });
@@ -168,7 +161,6 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
           contentType: false,
           xhr: function() {
             var xhr = new window.XMLHttpRequest();
-            // Upload progress
             xhr.upload.addEventListener("progress", function(evt) {
               if (evt.lengthComputable) {
                 var percentComplete = (index / chunks.length) * 100;
@@ -180,25 +172,23 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
           },
           success: function(response) {
             console.log(response);
-            console.log('POST');
             console.log('Index number:', index);
 
             index++;
-            retries = 0; // Reset the retry counter
+            retries = 0;
             uploadChunkWithRetry();
           },
           error: function(xhr, status, error) {
             console.log(error);
             fileInfo.textContent = 'Failed to upload chunk.';
 
-            // Retry the upload if the maximum number of retries is not reached
             if (retries < maxRetries) {
               retries++;
               setTimeout(uploadChunk, retryDelay);
             } else {
-              // Max retries reached, display error message
               fileInfo.textContent = 'Failed to upload chunk after multiple retries.';
               document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
+              deleteChunks(); // Delete the chunk files
             }
           }
         });
@@ -209,5 +199,21 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
 
     document.getElementById('progressBarContainer').style.display = 'block'; // Display the progress bar
     uploadChunkWithRetry();
+  }
+
+  function deleteChunks() {
+    $.ajax({
+      url: azure_app_service_migration.ajaxurl,
+      type: 'POST',
+      data: {
+        action: 'delete_chunks',
+      },
+      success: function(response) {
+        console.log(response);
+      },
+      error: function(xhr, status, error) {
+        console.log(error);
+      }
+    });
   }
 </script>
