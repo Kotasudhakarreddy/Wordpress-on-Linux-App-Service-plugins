@@ -79,3 +79,8 @@ define( 'AASM_W3TC_DB_PATH', 'wp-content' . DIRECTORY_SEPARATOR .
 define( 'AASM_W3TC_CONFIG_MASTER_PATH', 'wp-content' . DIRECTORY_SEPARATOR . 
                             'w3tc-config' . DIRECTORY_SEPARATOR .
                             'master.php');
+
+// ================
+// = DB records query separator =
+// ================
+define( 'AASM_DB_RECORDS_QUERY_SEPARATOR', '#$8@!J4*q6&$^+');

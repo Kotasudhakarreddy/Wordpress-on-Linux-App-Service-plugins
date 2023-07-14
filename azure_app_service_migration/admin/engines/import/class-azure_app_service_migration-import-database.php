@@ -79,7 +79,7 @@ class Azure_app_service_migration_Import_Database {
                 if (is_file($filePath) && str_ends_with($filePath, 'structure.sql')) {
                     $this->database_manager->import_sql_file($this->new_database_name, $filePath);
                 }
-                else if (is_file($filePath) && strpos($filePath, 'records_batch' !== false))
+                else if (is_file($filePath) && str_ends_with($filePath, '.sql'))
                 {
                     $table_records_files[] = $filePath;
                 }

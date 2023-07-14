@@ -174,7 +174,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
                             $recordValues[] = $this->formatRecordValue($value);
                         }
 
-                        $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");\n";
+                        $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");" . AASM_DB_RECORDS_QUERY_SEPARATOR ."\n";
                     }
 
                     if ($batchNumber === 1) {
