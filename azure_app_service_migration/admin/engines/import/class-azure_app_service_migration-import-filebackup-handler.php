@@ -72,6 +72,9 @@ class Azure_app_service_migration_Import_FileBackupHandler
 
     public function handle_combine_chunks()
     {
+        // continue executing if client side request aborts
+        ignore_user_abort(true);
+
         $param = isset($_POST['param']) ? $_POST['param'] : "";
         $cachingCdnValue = isset($_POST['caching_cdn']) ? $_POST['caching_cdn'] : "";
 
@@ -86,7 +89,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
             if (file_exists($filePath) && is_file($filePath)) {
                 unlink($filePath);
             }
-
+            
             // Create the original file
             $originalFilePath = $uploadDir . $originalFilename;
 

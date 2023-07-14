@@ -1,4 +1,6 @@
 <?php
+// To Do: Remove this file since it is redundant. 
+// Zip encryption check to be done on client side javascript
 class Azure_app_service_migration_Zip_Decrypt {
 
     public static function is_password_valid($zip_file_path, $password)
