@@ -23,7 +23,7 @@
 <?php
 $postMaxSize = ini_get('post_max_size'); // Retrieve post_max_size value
 $trimmedSize = substr($postMaxSize, 0, -1); // Remove the last character from the string
-$reducedSize = (int) $trimmedSize * 0.8; // Convert the trimmed size to an integer and taking only 80% of the allowed size
+$reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integer and taking only 80% of the allowed size
 ?>
 <script type="text/javascript">
   function splitFile(file, chunkSize) {
