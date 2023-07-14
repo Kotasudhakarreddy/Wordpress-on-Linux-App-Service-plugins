@@ -20,7 +20,11 @@
     </div>
   </div>
 </div>
-
+<?php
+$postMaxSize = ini_get('post_max_size'); // Retrieve post_max_size value
+$trimmedSize = substr($postMaxSize, 0, -1); // Remove the last character from the string
+$reducedSize = (int) $trimmedSize * 0.8; // Convert the trimmed size to an integer and taking only 80% of the allowed size
+?>
 <script type="text/javascript">
   function splitFile(file, chunkSize) {
     const chunks = [];
@@ -87,7 +91,10 @@
     formData.append('param', 'wp_ImportFile');
 
     var file = fileInput.files[0];
-    var chunkSize = 5 * 1024 * 1024; // 5MB chunk size
+    // var chunkSize = 5 * 1024 * 1024; // 5MB chunk size
+    // console.log('chunkSize: ', chunkSize);
+    var chunkSize = <?php echo $reducedSize; ?> * 1024 * 1024 ;
+    console.log('server size: ', <?php echo $reducedSize; ?> * 1024 * 1024);
     var chunks = splitFile(file, chunkSize);
 
     fileInfo.textContent = 'Importing...'; // Update the file info text
