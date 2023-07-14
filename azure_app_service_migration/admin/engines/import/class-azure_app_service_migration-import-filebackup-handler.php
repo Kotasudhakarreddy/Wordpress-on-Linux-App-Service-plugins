@@ -89,50 +89,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
             if (file_exists($filePath) && is_file($filePath)) {
                 unlink($filePath);
             }
-
-            // Get all chunk files in the upload directory
-            $chunkFiles = glob($uploadDir . $chunkPrefix . '*');
-
-            if (!empty($chunkFiles)) {
-                // Sort the chunk files by their names
-                natsort($chunkFiles);
-
-                // Initialize response
-                $response = 'Importing Zip File';
-
-                // To Do: return response once real time import updates is implemented
-                // return response to ajax call to prevent timeout.
-                //header("Connection: close");
-                //header("Content-Length: " . mb_strlen($response));
-                //echo $response;
-                //flush();
-
-                // Create the original file
-                $originalFilePath = $uploadDir . $originalFilename;
-
-                // Open the original file in append mode
-                $originalFile = fopen($originalFilePath, 'ab');
-
-                if ($originalFile !== false) {
-                    // Loop through the chunk files and append their contents to the original file
-                    foreach ($chunkFiles as $chunkFile) {
-                        $chunkContent = file_get_contents($chunkFile);
-
-                        if ($chunkContent !== false) {
-                            // Write the chunk content to the original file
-                            fwrite($originalFile, $chunkContent);
-
-                            // Delete the chunk file after combining
-                            unlink($chunkFile);
-                        } else {
-                            // Error handling if failed to read chunk content
-                            http_response_code(500);
-                            $response = 'Failed to read chunk file: ' . $chunkFile;
-                            fclose($originalFile);
-                            return;
-                        }
-                    }
-                  
+            
             // Create the original file
             $originalFilePath = $uploadDir . $originalFilename;
 
