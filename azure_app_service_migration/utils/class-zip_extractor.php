@@ -36,6 +36,9 @@ class AASM_Zip_Extractor {
 
             if (zip_entry_open($zip, $zip_entry, "r"))
             {
+                // reset time counter to prevent timeout
+                set_time_limit(0);
+
                 $buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
                 $path_file = $this->replace_forward_slash_with_directory_separator($destination_dir . $filename);
                 $new_dir = dirname($path_file);
@@ -99,6 +102,9 @@ class AASM_Zip_Extractor {
         $count=0;
         while ($zip_entry = zip_read($zip))
         {
+            // reset time counter to prevent timeout
+            set_time_limit(0);
+            
             $filename = $this->replace_forward_slash_with_directory_separator(zip_entry_name($zip_entry));
 
             // remove AASM_IMPORT_ZIP_FILE_NAME prefix in $filename

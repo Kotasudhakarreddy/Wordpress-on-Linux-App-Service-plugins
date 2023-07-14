@@ -69,7 +69,8 @@ class Azure_app_service_migration_Import_Database {
         
         // import table structure and keep track of table records to be imported later
         foreach ($files as $file) {
-
+            // reset time counter to prevent timeout
+            set_time_limit(0);
             // Exclude current directory (.) and parent directory (..)
             if ($file != '.' && $file != '..') {
                 $filePath = $this->db_temp_dir . $file;

@@ -45,6 +45,9 @@ class Azure_app_service_migration_Import_FileBackupHandler
 
     public function handle_combine_chunks()
     {
+        // continue executing if client side request aborts
+        ignore_user_abort(true);
+
         $param = isset($_POST['param']) ? $_POST['param'] : "";
         $cachingCdnValue = isset($_POST['caching_cdn']) ? $_POST['caching_cdn'] : "";
 
@@ -68,6 +71,16 @@ class Azure_app_service_migration_Import_FileBackupHandler
                 // Sort the chunk files by their names
                 natsort($chunkFiles);
 
+                // Initialize response
+                $response = 'Importing Zip File';
+
+                // To Do: return response once real time import updates is implemented
+                // return response to ajax call to prevent timeout.
+                //header("Connection: close");
+                //header("Content-Length: " . mb_strlen($response));
+                //echo $response;
+                //flush();
+
                 // Create the original file
                 $originalFilePath = $uploadDir . $originalFilename;
 
@@ -88,7 +101,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
                         } else {
                             // Error handling if failed to read chunk content
                             http_response_code(500);
-                            echo 'Failed to read chunk file: ' . $chunkFile;
+                            $response = 'Failed to read chunk file: ' . $chunkFile;
                             fclose($originalFile);
                             return;
                         }
