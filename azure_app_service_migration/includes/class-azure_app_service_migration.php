@@ -256,6 +256,9 @@ class Azure_app_service_migration
         // Add the action for non-authenticated users
         $this->loader->add_action('wp_ajax_nopriv_handle_combine_chunks', $importaxHandler , 'handle_combine_chunks');
 
+        // Add the action for authenticated users
+        $this->loader->add_action('wp_ajax_get_migration_status', $importaxHandler , 'get_migration_status');
+
     }
 
     /**

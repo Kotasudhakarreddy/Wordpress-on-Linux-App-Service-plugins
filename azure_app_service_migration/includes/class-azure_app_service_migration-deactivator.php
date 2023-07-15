@@ -31,7 +31,7 @@ class Azure_app_service_migration_Deactivator {
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
-
+		delete_option( AASM_MIGRATION_STATUS );
 	}
 
 }

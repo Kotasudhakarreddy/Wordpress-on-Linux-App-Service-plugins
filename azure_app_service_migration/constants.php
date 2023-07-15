@@ -23,17 +23,30 @@ define( 'AASM_IMPORT_ZIP_FILE_NAME', 'importfile' );
 // ================
 define( 'AASM_IMPORT_ZIP_LOCATION', substr(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH, 0, -1) . DIRECTORY_SEPARATOR . 
                                     'ImportedFile' . DIRECTORY_SEPARATOR);
+
+// ================
+// = Import Zip File Storage Path =
+// ================
 define( 'AASM_IMPORT_ZIP_PATH', AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . 
                                 'storage' . DIRECTORY_SEPARATOR . 
                                 'import' . DIRECTORY_SEPARATOR .
                                 AASM_IMPORT_ZIP_FILE_NAME . '.zip');
 
+// ================
+// = Database sql files storage path in zip file =
+// ================
 define( 'AASM_DATABASE_RELATIVE_PATH_IN_ZIP', 'wp-database' . DIRECTORY_SEPARATOR );
 
+// ================
+// = AASM plugin path in zip file =
+// ================
 define( 'AASM_PLUGIN_RELATIVE_PATH_IN_ZIP', 'wp-content' . DIRECTORY_SEPARATOR . 
                                             'plugins' . DIRECTORY_SEPARATOR .
                                             AASM_PLUGIN_NAME . DIRECTORY_SEPARATOR );
 
+// ================
+// = Directory to extract sql files to =
+// ================
 define( 'AASM_DATABASE_TEMP_DIR', AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . 'storage' . 
                                 DIRECTORY_SEPARATOR . 'dbtempdir' . DIRECTORY_SEPARATOR );
 
@@ -84,3 +97,30 @@ define( 'AASM_W3TC_CONFIG_MASTER_PATH', 'wp-content' . DIRECTORY_SEPARATOR .
 // = DB records query separator =
 // ================
 define( 'AASM_DB_RECORDS_QUERY_SEPARATOR', '#$8@!J4*q6&$^+');
+
+// ==============
+// = Migration Status =
+// ==============
+define( 'AASM_MIGRATION_STATUS', 'aasm_migration_status' );
+
+// ==============
+// = Import Service Type =
+// ==============
+define( 'AASM_IMPORT_SERVICE_TYPE', 'IMPORT' );
+
+// ==============
+// = Export Service Type =
+// ==============
+define( 'AASM_EXPORT_SERVICE_TYPE', 'EXPORT' );
+
+// ==============
+// = Export Service Log file path =
+// ==============
+define( 'AASM_IMPORT_LOGFILE_PATH', ABSPATH . 'wp-content' . 
+                                    DIRECTORY_SEPARATOR . 'aasm_import_log.txt');
+
+// ==============
+// = Export Service Log file path =
+// ==============
+define( 'AASM_MIGRATION_LOGFILE_PATH', ABSPATH . 'wp-content' . 
+                                    DIRECTORY_SEPARATOR . 'aasm_migration_log.txt');
