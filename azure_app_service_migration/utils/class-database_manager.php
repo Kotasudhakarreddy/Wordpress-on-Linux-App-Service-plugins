@@ -32,8 +32,32 @@ class AASM_Database_Manager {
     public function import_sql_file($databaseName, $sqlFilePath) {
         global $wpdb;
         $wpdb->select($databaseName);
-        $sql = file_get_contents($sqlFilePath); // Read in entire file
-        $wpdb->query($sql);
+        
+        // Temporary variable, used to store current query
+        $templine = '';
+        // Read in entire file
+        $lines = file($sqlFilePath);
+        // Loop through each line
+
+        foreach ($lines as $index => $line)
+        {
+            // Add this line to the current segment
+            $templine .= $line;
+
+            if (str_ends_with($line, AASM_DB_RECORDS_QUERY_SEPARATOR . PHP_EOL) || $index === array_key_last($lines))
+            {
+                // remove the query separator
+                $templine = str_ends_with($templine, AASM_DB_RECORDS_QUERY_SEPARATOR . PHP_EOL) 
+                            ? substr($templine, 0, - (strlen(AASM_DB_RECORDS_QUERY_SEPARATOR) +1))
+                            : $templine;
+
+                // Perform the query
+                $wpdb->query($templine);
+                
+                // Reset temp variable to empty
+                $templine = '';
+            }
+        }
         return true;
     }
 

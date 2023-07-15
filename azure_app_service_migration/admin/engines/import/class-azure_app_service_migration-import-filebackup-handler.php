@@ -101,6 +101,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
                 $chunkFile = $uploadDir . $chunkPrefix . $chunkIndex;
 
                 while (file_exists($chunkFile)) {
+                    set_time_limit(0);
                     // Read the content of the current chunk file
                     $chunkContent = file_get_contents($chunkFile);
 
