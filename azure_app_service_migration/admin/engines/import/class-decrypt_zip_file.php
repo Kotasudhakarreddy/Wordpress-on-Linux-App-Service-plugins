@@ -1,5 +1,5 @@
 <?php
-// To Do: Remove this file since it is redundant. 
+// To Do: Remove this file since it is redundant here. 
 // Zip encryption check to be done on client side javascript
 class Azure_app_service_migration_Zip_Decrypt {
 
