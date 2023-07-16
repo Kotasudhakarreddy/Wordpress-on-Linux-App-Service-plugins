@@ -154,6 +154,15 @@ class Azure_app_service_migration_Import_FileBackupHandler
         wp_die(); // Terminate the request
     }
 
+    public function delete_chunks($uploadDir)
+    {
+        $uploadDir = AASM_IMPORT_ZIP_LOCATION;
+        $chunkFiles = glob($uploadDir . 'chunk_*');
+        foreach ($chunkFiles as $file) {
+            unlink($file);
+        }
+    }
+
 }
 
 new Azure_app_service_migration_Import_FileBackupHandler();

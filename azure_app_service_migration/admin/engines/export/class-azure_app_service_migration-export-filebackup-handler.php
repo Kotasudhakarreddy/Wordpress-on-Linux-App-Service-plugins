@@ -51,7 +51,12 @@ class Azure_app_service_migration_Export_FileBackupHandler
 
     private function getZipFilePath($zipFileName)
     {
-        return AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . $zipFileName;
+         // Create the directory if it doesn't exist
+         if (!is_dir(AASM_EXPORT_ZIP_LOCATION)) {
+            mkdir(AASM_EXPORT_ZIP_LOCATION, 0777, true);
+            // Set appropriate permissions for the directory (0777 allows read, write, and execute permissions for everyone)
+        }
+        return AASM_EXPORT_ZIP_LOCATION . $zipFileName;
     }
 
     private function getExcludedFolders($dontexptsmedialibrary, $dontexptsthems, $dontexptmustuseplugins, $dontexptplugins)
@@ -76,7 +81,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
     {
         try {
             $File_Name = $_SERVER['HTTP_HOST'];
-            $iterator = new DirectoryIterator(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH);
+            $iterator = new DirectoryIterator(AASM_EXPORT_ZIP_LOCATION);
             foreach ($iterator as $file) {
                 if ($file->isFile() && strpos($file->getFilename(), $File_Name) === 0 && pathinfo($file->getFilename(), PATHINFO_EXTENSION) === 'zip') {
                     $filePath = $file->getPathname();
