@@ -86,7 +86,7 @@ class Azure_app_service_migration_Custom_Logger
     }
 
     // Custom error handler
-    public static function done($service_type, $message)
+    public static function done($service_type)
     {
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');

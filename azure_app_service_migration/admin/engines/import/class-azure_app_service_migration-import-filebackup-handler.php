@@ -12,6 +12,8 @@ class Azure_app_service_migration_Import_FileBackupHandler
         $param = isset($_POST['param']) ? $_POST['param'] : "";
 
         if (!empty($param) && $param === "wp_ImportFile_chunks") {
+            Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Uploading zip file.', true);
+            
             $fileChunk = $_FILES['fileChunk'];
             $uploadDir = AASM_IMPORT_ZIP_LOCATION;
             // Create the directory if it doesn't exist
