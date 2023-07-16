@@ -14,6 +14,7 @@ class Azure_app_service_migration_Import_Content {
 
     public function import_content()
     {
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Starting wp-content import.', true);
         // Flag to hold if file data has been processed
 		$completed = true;
 
@@ -23,7 +24,7 @@ class Azure_app_service_migration_Import_Content {
 
 		// create extractor object for import zip file
 		$archive = new AASM_Zip_Extractor( $this->import_zip_path );
-        
+
         $files_to_exclude = $this->get_dropins();
         $files_to_exclude = array_merge(
             $files_to_exclude,
@@ -47,6 +48,7 @@ class Azure_app_service_migration_Import_Content {
             );
 		}
 
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Extracting wp-content from uploaded zip file.', true);
         // Extract all WP-CONTENT files from archive to WP_CONTENT_DIR
         try {
             $archive->extract( ABSPATH, $files_to_exclude );
@@ -59,8 +61,11 @@ class Azure_app_service_migration_Import_Content {
 
         // delete cache files produced by w3tc plugin
         if ( isset( $this->params['retain_w3tc_config'] ) && $this->params['retain_w3tc_config'] === true ) {
+            Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Refreshing W3 Total Cache files.', true);
             $this->delete_w3tc_cache_files();
         }
+
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Finished Importing wp-content.', true);
     }
 
     private function delete_w3tc_cache_files()
@@ -77,15 +82,19 @@ class Azure_app_service_migration_Import_Content {
         }
 
         if (isset($params['retain_w3tc_config']) && $params['retain_w3tc_config'] === true) {
+            Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Setting up Azure Blob Storage.', true);
+
             $blob_storage_settings = AASM_Blob_Storage_Client::get_blob_storage_settings();
             if (empty($blob_storage_settings)) {
                 return; // Return early if blob storage is disabled
             }
-            
+
             $blob_storage_client = new AASM_Blob_Storage_Client(
                 $blob_storage_settings['storage_account'],
                 $blob_storage_settings['storage_account_key']
             );
+
+            Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Uploading media files and uploads to Azure Blob Storage.', true);
 
             $zip = zip_open($this->import_zip_path);
             while ($zip_entry = zip_read($zip)) {

@@ -38,6 +38,7 @@ class Azure_app_service_migration_Import_Database {
 		$archive = new AASM_Zip_Extractor( $this->import_zip_path );
 
         // Clean temporary directory to hold sql files
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Clearing Database files placeholder directory.', true);
         AASM_Common_Utils::clear_directory_recursive($this->db_temp_dir);
 
         // extract database sql files into temporary directory
@@ -51,7 +52,7 @@ class Azure_app_service_migration_Import_Database {
 
         // update DB_NAME constant in wp-config
         $this->update_dbname_wp_config($this->new_database_name);
-        
+
         // imports w3tc options from original DB to new DB
         if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
             $this->import_w3tc_options();
@@ -63,10 +64,10 @@ class Azure_app_service_migration_Import_Database {
         if (!file_exists($this->db_temp_dir)) {
             mkdir($this->db_temp_dir, 0777, true);
         }
-
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Importing Database tables and records.', true);
         $files = scandir($this->db_temp_dir);
         $table_records_files = [];
-        
+
         // import table structure and keep track of table records to be imported later
         foreach ($files as $file) {
             // reset time counter to prevent timeout
@@ -85,7 +86,8 @@ class Azure_app_service_migration_Import_Database {
                 }
             }
         }
-        
+
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Finished importing Database tables. Importing database records...', true);
         // Import table records
         foreach ($table_records_files as $table_records)
         {
@@ -95,6 +97,8 @@ class Azure_app_service_migration_Import_Database {
 
     // Imports W3 Total Cache settings in wp_options table in database
     private function import_w3tc_options() {
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Importing W3 Total Cache options to the new database.', true);
+
         $sourceDatabase = $this->old_database_name;
         $destinationDatabase = $this->new_database_name;
 
@@ -132,9 +136,10 @@ class Azure_app_service_migration_Import_Database {
 
     // This function updates DB_NAME constant in wp-config.php file
     public static function update_dbname_wp_config($new_db_name) {
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Switching to new database.', true);
         // Path to the wp-config.php file
         $config_file_path = ABSPATH . 'wp-config.php';
-        
+
         // To Do: Debug the commented method
         // swap database names
         //$temp_database_name = $this->generate_unique_database_name();
@@ -143,29 +148,31 @@ class Azure_app_service_migration_Import_Database {
         // Read the contents of the wp-config.php file
 
         $config_file_contents = file_get_contents($config_file_path);
-    
+
         // Replace the existing database_name value with the new one
         $updated_file_contents = preg_replace(
             "/define\(\'DB_NAME\', (.*)\);/",
             "define('DB_NAME', '" . $new_db_name . "');",
             $config_file_contents
         );
-    
+
         // Write the updated contents back to the wp-config.php file
         file_put_contents($config_file_path, $updated_file_contents);
     }
 
     // Generates a unique database name. Retries 5 times
     private function generate_unique_database_name($current_dbname, $database_manager) {
-        $new_dbname = 'aasm_db';
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Generating new database name.', true);
+        $dbname_suffix = substr($current_dbname, 0, min(strlen($current_dbname), 10));
 
         for ($trycount = 0; $trycount < 5; $trycount++) {
-            $new_dbname = 'aasm_db' . AASM_Common_Utils::generate_random_string_short();
+            $new_dbname = $dbname_suffix . '_aasm_db_' . AASM_Common_Utils::generate_random_string_short();
             
             if (!($this->database_manager->database_exists($new_dbname)))
                 return $new_dbname;
         }
 
-        return $new_dbname;
+        // To Do: Handle error here
+        return $dbname_suffix;
     }
 }
