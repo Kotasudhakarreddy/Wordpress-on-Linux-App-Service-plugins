@@ -89,12 +89,15 @@
       success: function(response) {
         // Handle the success response after combining the chunks
         console.log(response);
+        
         // Update status text value
         statusText.textContent = response.message;
         
-        if (response.type == 'status')
+        // Call updateStatusText recursively only if migration is still in progress
+        if (response.type == 'info')
         {
           updateStatusText(0);
+          return;
         }
       },
       error: function(xhr, status, error) {

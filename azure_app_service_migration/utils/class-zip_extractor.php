@@ -21,6 +21,7 @@ class AASM_Zip_Extractor {
             throw new AASM_Archive_Destination_Dir_Exception ('Zip extract error: Target destination not provided.');
         }
 
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Reading Zip file for extracting wp-content.', true);
         $zip = zip_open($this->zip_path);
         
         $count=0;
@@ -97,6 +98,7 @@ class AASM_Zip_Extractor {
             mkdir($destination_dir, 0777, true);
         }
         
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Reading zip file to extract database tables and records.', true);
         $zip = zip_open($this->zip_path);
 
         $count=0;

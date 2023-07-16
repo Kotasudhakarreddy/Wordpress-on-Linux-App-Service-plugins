@@ -6,6 +6,13 @@ class Azure_app_service_migration_Custom_Logger
     // Initialize the custom logging functionality
     public static function init()
     {
+        // Initialize log file
+        $log_file_dir = dirname(AASM_MIGRATION_LOGFILE_PATH);
+        if (!file_exists($log_file_dir))
+        {
+            mkdir($log_file_dir, 0777, true);
+        }
+
         // Hook the log_user_registration function to the user_register action
         add_action('user_register', array('Azure_app_service_migration_Custom_Logger', 'log_user_registration'), 10, 1);
 
@@ -27,6 +34,7 @@ class Azure_app_service_migration_Custom_Logger
     {
         // Define the log file path and name
         $log_file = AASM_MIGRATION_LOGFILE_PATH;
+        
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
 
@@ -34,7 +42,7 @@ class Azure_app_service_migration_Custom_Logger
         $log_message = "[{$current_time}] {$service_type} {$status} {$message}" . PHP_EOL;
 
         // Append the log message to the log file
-        file_put_contents($log_file, $log_message, FILE_APPEND);
+        file_put_contents($log_file, $log_message . PHP_EOL, FILE_APPEND);
     }
 
     // Log the user registration event
@@ -46,7 +54,7 @@ class Azure_app_service_migration_Custom_Logger
     }
 
     // Custom error handler
-    public static function handleError($severity, $message)
+    public static function handleError($severity, $message, $should_update_status_option = false)
     {
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
@@ -54,12 +62,15 @@ class Azure_app_service_migration_Custom_Logger
         self::writeToLog($error_message);
         
         // Update AASM_MIGRATION_STATUS option in Database
-        $migration_status = array( 'type' => 'error', 'title' => $severity, 'message' => $message );
-        self::update_migration_status($migration_status);
+        if ($should_update_status_option)
+        {
+            $migration_status = array( 'type' => 'error', 'title' => $severity, 'message' => $message );
+            self::update_migration_status($migration_status);
+        }
     }
 
     // Custom error handler
-    public static function logInfo($service_type, $message)
+    public static function logInfo($service_type, $message, $should_update_status_option = false)
     {
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
@@ -67,8 +78,11 @@ class Azure_app_service_migration_Custom_Logger
         self::writeToLog($info_message);
         
         // Update AASM_MIGRATION_STATUS option in Database
-        $migration_status = array( 'type' => 'status', 'title' => $service_type, 'message' => $message );
-        self::update_migration_status($migration_status);
+        if ($should_update_status_option)
+        {
+            $migration_status = array( 'type' => 'status', 'title' => $service_type, 'message' => $message );
+            self::update_migration_status($migration_status);
+        }
     }
 
     // Custom error handler
