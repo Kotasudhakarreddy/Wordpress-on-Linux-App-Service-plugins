@@ -6,8 +6,6 @@ class Azure_app_service_migration_Import_Controller {
 		// Initialize log file
 		Azure_app_service_migration_Custom_Logger::reset_log_file();
 
-        //To DO: upload zip file and check for encryption
-
 		//Import wp-content
 		$aasm_import_wpcontent = new Azure_app_service_migration_Import_Content($import_file_path, $params);
 		$aasm_import_wpcontent->import_content();
@@ -15,5 +13,8 @@ class Azure_app_service_migration_Import_Controller {
 		//Import database
 		$aasm_import_database = new Azure_app_service_migration_Import_Database($import_file_path, $params);
 		$aasm_import_database->import_database();
+
+		// Log Import completion status and update status option in database
+		Azure_app_service_migration_Custom_Logger::done(AASM_IMPORT_SERVICE_TYPE);
     }
 }

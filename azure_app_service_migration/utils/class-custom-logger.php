@@ -12,13 +12,6 @@ class Azure_app_service_migration_Custom_Logger
         {
             mkdir($log_file_dir, 0777, true);
         }
-
-        // Hook the log_user_registration function to the user_register action
-        add_action('user_register', array('Azure_app_service_migration_Custom_Logger', 'log_user_registration'), 10, 1);
-
-        // Set up error and exception handling
-        set_error_handler(array('Azure_app_service_migration_Custom_Logger', 'handleError'));
-        set_exception_handler(array('Azure_app_service_migration_Custom_Logger', 'handleException'));
     }
 
     // Clear Log file
@@ -86,7 +79,7 @@ class Azure_app_service_migration_Custom_Logger
     }
 
     // Custom error handler
-    public static function done($service_type, $message)
+    public static function done($service_type)
     {
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
