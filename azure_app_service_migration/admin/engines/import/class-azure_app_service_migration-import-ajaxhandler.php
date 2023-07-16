@@ -7,7 +7,7 @@ class Azure_app_service_migration_Import_AjaxHandler {
         }
 
         // get AASM_MIGRATION_STATUS option from database and send json encoded value to browser client
-        $data = get_option( AI1WM_STATUS, array() );
+        $data = get_option( AASM_MIGRATION_STATUS, array() );
         echo json_encode( $data, $options );
         
         wp_die();

@@ -122,7 +122,7 @@ class Azure_app_service_migration_Custom_Logger
         self::update_migration_status($migration_status);
     }
 
-    private static function update_migration_status($data)
+    public static function update_migration_status($data)
     {
         update_option( AASM_MIGRATION_STATUS, $data );
     }
