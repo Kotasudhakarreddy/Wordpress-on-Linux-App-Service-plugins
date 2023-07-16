@@ -67,7 +67,20 @@ class Azure_app_service_migration_Custom_Logger
         self::writeToLog($info_message);
         
         // Update AASM_MIGRATION_STATUS option in Database
-        $migration_status = array( 'type' => 'Status', 'title' => $service_type, 'message' => $message );
+        $migration_status = array( 'type' => 'status', 'title' => $service_type, 'message' => $message );
+        self::update_migration_status($migration_status);
+    }
+
+    // Custom error handler
+    public static function done($service_type, $message)
+    {
+        // Get the current date and time
+        $current_time = date('Y-m-d H:i:s');
+        $info_message = "AASM_LOG [{$current_time}]: {$service_type} Finished.";
+        self::writeToLog($info_message);
+        
+        // Update AASM_MIGRATION_STATUS option in Database
+        $migration_status = array( 'type' => 'done', 'title' => $service_type, 'message' => $service_type . ' Successful.' );
         self::update_migration_status($migration_status);
     }
 
