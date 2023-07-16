@@ -39,12 +39,4 @@ class AASM_Common_Utils {
     public static function replace_forward_slash_with_directory_separator ( $dir ) {
         return str_replace("/", DIRECTORY_SEPARATOR, $dir);
     }
-
-    public static function aasm_json_response( $data, $options = 0 ) {
-        if ( ! headers_sent() ) {
-            header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset', 'utf-8' ) );
-        }
-    
-        echo json_encode( $data, $options );
-    }
 }

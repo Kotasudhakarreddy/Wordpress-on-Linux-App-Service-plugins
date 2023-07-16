@@ -251,8 +251,9 @@ class Azure_app_service_migration
 
         $this->loader->add_action('wp_ajax_delete_chunks', $importaxHandler, 'delete_chunks');
 
-        // Add the action for authenticated users
-        $this->loader->add_action('wp_ajax_get_migration_status', $importaxHandler , 'get_migration_status');
+        // Register status update AJAX handler
+        $statusUpdateHandler = new Azure_app_service_migration_Import_AjaxHandler();
+        $this->loader->add_action('wp_ajax_get_migration_status', $statusUpdateHandler , 'get_migration_status');
 
     }
 

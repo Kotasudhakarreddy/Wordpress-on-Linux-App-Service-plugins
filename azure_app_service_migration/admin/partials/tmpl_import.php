@@ -13,6 +13,7 @@
       <div style="text-align: center;">
         <button type="button" class="btn btn-primary" id="importfile" onclick="handleImport()">Import</button>
       </div>
+      <div id = "statusdiv"><p id="statusText">Import status text</p></div>
     </form>
     <div style="margin-top: 20px;">
       <input type="checkbox" name="caching_cdn" id="caching_cdn" value="caching_cdn" style="margin-right: 8px; transform: scale(0.8);">
@@ -61,6 +62,44 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
     } else {
       fileInfo.textContent = "Drag and drop files here or click to select files.";
     }
+  }
+
+  // Makes a GET request to the server to get IMPORT status
+  function updateStatusText(retryCount) {
+    // Set max retry count for getting status from server
+    maxRetryCount = 15;
+
+    $.ajax({
+      url: ajaxurl,
+      type: 'GET',
+      dataType: 'json',
+      data: {
+        action: 'get_migration_status', // Adjust the server-side action name
+      },
+      success: function(response) {
+        // Handle the success response after combining the chunks
+        console.log(response);
+        // Update status text value
+        statusText.textContent = response.message;
+        
+        if (response.type == 'status')
+        {
+          updateStatusText(0);
+        }
+      },
+      error: function(xhr, status, error) {
+        // Handle the error response
+        console.log(error);
+
+        // Retry the updateStatus call if the maximum number of retries is not reached
+        if (retryCount < maxRetryCount) {
+          updateStatusText(retryCount+1);
+        } else {
+          // Max retries reached, display error message
+          statusText.textContent = 'Failed to connect to server. Import can still be in progress';
+        }
+      }
+    });
   }
 
   function handleImport() {
