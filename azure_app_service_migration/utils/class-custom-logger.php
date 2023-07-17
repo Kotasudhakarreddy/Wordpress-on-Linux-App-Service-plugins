@@ -7,18 +7,14 @@ class Azure_app_service_migration_Custom_Logger
     public static function init()
     {
         // Initialize log file
-        $log_file_dir = dirname(AASM_MIGRATION_LOGFILE_PATH);
+        $log_file = AASM_IMPORT_LOGFILE_PATH;
+        $log_file_dir = dirname(AASM_IMPORT_LOGFILE_PATH);
         if (!file_exists($log_file_dir))
         {
             mkdir($log_file_dir, 0777, true);
         }
-    }
 
-    // Clear Log file
-    public static function reset_log_file()
-    {
-        $log_file = AASM_MIGRATION_LOGFILE_PATH;
-        file_put_contents($log_file, 'Azure App Service Migration Logs' . PHP_EOL . PHP_EOL);
+        file_put_contents($log_file, 'Azure App Service Migration IMPORT Logs' . PHP_EOL . PHP_EOL);
     }
 
     // Write log messages to the custom log file
@@ -26,8 +22,8 @@ class Azure_app_service_migration_Custom_Logger
     public static function writeToLog($status, $message = '', $service_type = '')
     {
         // Define the log file path and name
-        $log_file = AASM_MIGRATION_LOGFILE_PATH;
-        
+        $log_file = AASM_IMPORT_LOGFILE_PATH;
+
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
 
@@ -48,7 +44,7 @@ class Azure_app_service_migration_Custom_Logger
         self::writeToLog($info_message);
     }
 
-    public static function logError($service_type, $message)
+    public static function logError($service_type, $message, $echo_status = true)
     {
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
@@ -56,10 +52,12 @@ class Azure_app_service_migration_Custom_Logger
         self::writeToLog($error_message);
 
         // echo status to return to server
-        $migration_status = array( 'type' => 'error', 'message' => $error_message );
-        echo json_encode($migration_status);
+        if ($echo_status) {
+            $migration_status = array( 'status' => 'error', 'message' => $error_message );
+            echo json_encode($migration_status);
 
-        wp_die();
+            wp_die();
+        }
     }
 
     // Custom error handler
@@ -92,7 +90,7 @@ class Azure_app_service_migration_Custom_Logger
 
         if ($echo_status) {
             // echo status to return to server
-            $migration_status = array( 'type' => 'exception', 'message' => $log_message );
+            $migration_status = array( 'status' => 'exception', 'message' => $log_message );
             echo json_encode($migration_status);
 
             wp_die();

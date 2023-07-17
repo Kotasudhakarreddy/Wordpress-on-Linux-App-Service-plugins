@@ -4,7 +4,7 @@ class Azure_app_service_migration_Import_Controller {
     public static function import($params, $import_file_path) {
         
 		// Initialize log file
-		Azure_app_service_migration_Custom_Logger::reset_log_file();
+		Azure_app_service_migration_Custom_Logger::init();
 
 		//Import wp-content
 		$aasm_import_wpcontent = new Azure_app_service_migration_Import_Content($import_file_path, $params);

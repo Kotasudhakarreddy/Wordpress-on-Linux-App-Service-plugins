@@ -118,11 +118,5 @@ define( 'AASM_EXPORT_SERVICE_TYPE', 'EXPORT' );
 // ==============
 // = Export Service Log file path =
 // ==============
-define( 'AASM_IMPORT_LOGFILE_PATH', ABSPATH . 'wp-content' . 
-                                    DIRECTORY_SEPARATOR . 'aasm_import_log.txt');
-
-// ==============
-// = Export Service Log file path =
-// ==============
-define( 'AASM_MIGRATION_LOGFILE_PATH', ABSPATH . 'wp-content' . 
-                                    DIRECTORY_SEPARATOR . 'aasm_migration_log.txt');
+define( 'AASM_IMPORT_LOGFILE_PATH', AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH . 'Logs' . 
+                                    DIRECTORY_SEPARATOR . 'import_logs.txt');
