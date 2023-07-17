@@ -109,46 +109,33 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
     }
     */
 
-    // Makes a GET request to the server to get IMPORT status
-    function updateStatusText(retryCount) {
+  // Makes a GET request to the server to get IMPORT status
+  function updateStatusText(retryCount) {
     // Set max retry count for getting status from server
     maxRetryCount = 15;
 
-      $.ajax({
-        url: ajaxurl,
-        type: 'POST',
-        dataType: 'json',
-        data: {
-          action: 'get_migration_status', // Adjust the server-side action name
-        },
-        success: function(response) {
-          // Handle the success response after combining the chunks
-          console.log(response);
-          
-          // To Do (Sudhakar): Display response.message in status box.
-          // Currently updating a text field (statusText) in the page. 
-          
-          // Update status text value
-          statusText.textContent = response.message;
-          
-          // Call updateStatusText recursively only if migration is still in progress
-          if (response.type == 'status')
-          {
-            updateStatusText(0);
-            return;
-          }
-        },
-        error: function(xhr, status, error) {
-          // Handle the error response
-          console.log(error);
-
-          // Retry the updateStatus call if the maximum number of retries is not reached
-          if (retryCount < maxRetryCount) {
-            updateStatusText(retryCount+1);
-          } else {
-            // Max retries reached, display error message
-            statusText.textContent = 'Failed to connect to server. Import can still be in progress';
-          }
+    $.ajax({
+      url: ajaxurl,
+      type: 'POST',
+      dataType: 'json',
+      data: {
+        action: 'get_migration_status', // Adjust the server-side action name
+      },
+      success: function(response) {
+        // Handle the success response after combining the chunks
+        console.log(response);
+        
+        // To Do (Sudhakar): Display response.message in status box.
+        // Currently updating a text field (statusText) in the page. 
+        
+        // Update status text value
+        statusText.textContent = response.message;
+        
+        // Call updateStatusText recursively only if migration is still in progress
+        if (response.type == 'status')
+        {
+          updateStatusText(0);
+          return;
         }
       },
       error: function(xhr, status, error) {
