@@ -27,7 +27,7 @@ class AASM_Database_Manager {
     public function run_query($databaseName, $query) {
         global $wpdb;
         $wpdb->select($databaseName);
-        return $wpdb->query($query) !== false;
+        return $wpdb->get_results($query);
     }
 
     public function import_sql_file($databaseName, $sqlFilePath) {

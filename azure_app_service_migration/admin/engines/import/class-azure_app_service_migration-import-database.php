@@ -21,7 +21,7 @@ class Azure_app_service_migration_Import_Database {
 
         $this->database_manager = new AASM_Database_Manager();
         $this->old_database_name = $wpdb->$dbname;
-        $this->new_database_name = $this->generate_unique_database_name($dbname, $this->database_manager);
+        $this->new_database_name = $this->generate_unique_database_name($this->old_database_name, $this->database_manager);
         $this->params = $params;
         $this->db_temp_dir = AASM_DATABASE_TEMP_DIR;            // Temporary directory for extracting sql files
         $this->import_zip_path = ($import_zip_path === null)    // Path to the uploaded import zip file
@@ -50,13 +50,13 @@ class Azure_app_service_migration_Import_Database {
         // Import each table sql file into the new database
         $this->import_db_sql_files();
 
-        // update DB_NAME constant in wp-config
-        $this->update_dbname_wp_config($this->new_database_name);
-
         // imports w3tc options from original DB to new DB
         if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
             $this->import_w3tc_options();
         }
+
+        // update DB_NAME constant in wp-config
+        $this->update_dbname_wp_config($this->new_database_name);
     }
 
     // Imports all sql files in wp-database/ directory inside the import zip file
@@ -89,8 +89,7 @@ class Azure_app_service_migration_Import_Database {
 
         Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Finished importing Database tables. Importing database records...', true);
         // Import table records
-        foreach ($table_records_files as $table_records)
-        {
+        foreach ($table_records_files as $table_records) {
             $this->database_manager->import_sql_file($this->new_database_name, $table_records);
         }
     }
@@ -102,7 +101,7 @@ class Azure_app_service_migration_Import_Database {
         $sourceDatabase = $this->old_database_name;
         $destinationDatabase = $this->new_database_name;
 
-        $sqlResult = $conn->query("SELECT option_id, option_name, option_value, autoload FROM $sourceDatabase.wp_options WHERE option_name LIKE '%w3tc%'");
+        $sqlResult = $this->database_manager->run_query("SELECT option_id, option_name, option_value, autoload FROM $sourceDatabase.wp_options WHERE option_name LIKE '%w3tc%'");
 
         // Generate the import query
         $importQuery = generate_w3tc_import_query($destinationDatabase, $sqlResult);
@@ -111,19 +110,20 @@ class Azure_app_service_migration_Import_Database {
         $this->database_manager->run_query($destinationDatabase, $importQuery);
     }
 
-    public function generate_w3tc_import_query($databaseName, $w3tc_options) {
+    private function generate_w3tc_import_query($databaseName, $w3tc_options) {
         // Start building the SQL query
         $importQuery = "INSERT INTO $databaseName.wp_options (option_id, option_name, option_value, autoload) VALUES";
     
         // Iterate over the result rows
         foreach ($w3tc_options as $row) {
-            $option_id = addslashes($row['option_id']);
-            $option_name = addslashes($row['option_name']);
-            $option_value = addslashes($row['option_value']);
-            $autoload = addslashes($row['autoload']);
-    
+            $option_id = addslashes($row->option_id);
+            $option_name = addslashes($row->option_name);
+            $option_value = addslashes($row->option_value);
+            $autoload = addslashes($row->autoload);
+            // Update option in current database
+            update_option($option_name, $option_value);
             // Add each row values to the query
-            $importQuery .= " ('$option_id', '$option_name', '$option_value', '$autoload'),";
+            //$importQuery .= " ('$option_id', '$option_name', '$option_value', '$autoload'),";
         }
     
         // Remove the trailing comma
@@ -140,7 +140,7 @@ class Azure_app_service_migration_Import_Database {
         // Path to the wp-config.php file
         $config_file_path = ABSPATH . 'wp-config.php';
 
-        // To Do: Debug the commented method
+        // To Do: Debug the commented method and replace with the following code
         // swap database names
         //$temp_database_name = $this->generate_unique_database_name();
         //$this->database_manager->rename_database($this->old_database_name, $temp_database_name);
@@ -158,6 +158,9 @@ class Azure_app_service_migration_Import_Database {
 
         // Write the updated contents back to the wp-config.php file
         file_put_contents($config_file_path, $updated_file_contents);
+        
+        // Adds AASM_MIGRATION_STATUS option to new database in addition to logging
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Updated Database name in wp-config.', true);
     }
 
     // Generates a unique database name. Retries 5 times
