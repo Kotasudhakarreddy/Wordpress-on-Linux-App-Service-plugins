@@ -23,6 +23,7 @@ jQuery(function ($) {
 		stopBlinking($("#exportdownloadfile"));
 	  // Hide the exportdownloadfile element
 	  $("#exportdownloadfile").hide();
+    $('#downloadLink').hide();
   
 	  // Disable the button and change text to indicate processing
 	  $(this).prop("disabled", true).text("Generating Export...");
@@ -36,6 +37,8 @@ jQuery(function ($) {
 		if (data.status == 1) {
 		  alert(data.message);
 		  $("#exportdownloadfile").show();
+      $('#downloadLink').show().css('display', 'inline-block');
+
 		  blinkElement("#exportdownloadfile");
 		  $('#exportdownloadfile').load(window.location.href + ' #exportdownloadfile');
 		} else {
@@ -83,8 +86,8 @@ jQuery(function ($) {
 		clearInterval(blinkInterval);
 		clearTimeout(blinkTimeout);
 		element.stop().show();
-	  }
-	
+	  }   
+   
 	// Add event listeners for drag and drop functionality
 	$("#dropzone")
 	  .on("dragover", function (e) {

@@ -37,6 +37,8 @@ define( 'AASM_IMPORT_ZIP_PATH', AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH .
 // ================
 // = Database sql files storage path in zip file =
 // ================
+define( 'AASM_LOG_FILE_LOCATION', substr(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH, 0, -1) . DIRECTORY_SEPARATOR . 
+                                'Logs' . DIRECTORY_SEPARATOR);
 define( 'AASM_DATABASE_RELATIVE_PATH_IN_ZIP', 'wp-database' . DIRECTORY_SEPARATOR );
 
 // ================

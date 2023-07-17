@@ -49,35 +49,39 @@
             <fluent-button class="generatefile" name="generatefile" id="generatefile" appearance="accent">
                 Generate Export File
             </fluent-button>
+            <div id="downloadLink" style="display:none;">
+            <a href="#" onclick="downloadLogFile()" >Download Log File</a>
+        </div>
         </form>
         <div id="exportdownloadfile">
             <?php
-                $wp_root_url = get_home_url();
-                $wp_root_filepath = $wp_root_url . "/wp-content/plugins/azure-app-service-migration-plugin/ExportedFile/";
-                $dirname = AASM_EXPORT_ZIP_LOCATION;
-                $reportfiles = scandir($dirname, 1);
-                foreach ($reportfiles as $file) {
-                    if (substr($file, -4) == ".zip") {
-                        $folderpath = $wp_root_filepath;
-                        $finame = $folderpath . '' . $file;
-                        print "<a style='color:#ffffff;margin-top:2em' href='" . $folderpath . "" . $file . "' name='downloadfile' id='downloadfile' class='btn btn-success btn-sm'>Download Export File - $file</a>";
-                    }
+            $wp_root_url = get_home_url();
+            $wp_root_filepath = $wp_root_url . "/wp-content/plugins/azure_app_service_migration/ExportedFile/";
+            $dirname = AASM_EXPORT_ZIP_LOCATION;
+            $reportfiles = scandir($dirname, 1);
+            foreach ($reportfiles as $file) {
+                if (substr($file, -4) == ".zip") {
+                    $folderpath = $wp_root_filepath;
+                    $finame = $folderpath . '' . $file;
+                    print "<a style='color:#ffffff;margin-top:2em' href='" . $folderpath . "" . $file . "' name='downloadfile' id='downloadfile' class='btn btn-success btn-sm'>Download Export File - $file</a>";
                 }
-                //$src = 'https://unpkg.com/@fluentui/web-components';
-                $src = $wp_root_url . "/wp-content/plugins/azure-app-service-migration-plugin/assets/node_modules/@fluentui/web-components/dist/web-components.js";
+            }
+            //$src = 'https://unpkg.com/@fluentui/web-components';
+            $src = $wp_root_url . "/wp-content/plugins/azure_app_service_migration/assets/node_modules/@fluentui/web-components/dist/web-components.js";
             ?>
             <div class="overlay"></div>
         </div>
     </div>
 </div>
+
 <script type="module" src="<?php echo esc_url($src); ?>"></script>
 
 <script type="text/javascript" language="javascript">
-    $(document).ready(function(){
+    $(document).ready(function() {
         $("#prtbkuppwdfields").hide();
-    })
+    });
 
-    $('#prtbkuppwd').click(function(){
+    $('#prtbkuppwd').click(function() {
         if ($(this).prop('checked')) {
             $("#prtbkuppwdfields").hide();
             $("#password").val("");
@@ -86,4 +90,29 @@
             $("#prtbkuppwdfields").show();
         }
     });
+
+    function downloadLogFile() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '<?php echo get_home_url(); ?>/wp-content/plugins/azure_app_service_migration/Logs/export_log.txt', true);
+        xhr.responseType = 'blob';
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(xhr.response);
+                link.download = 'export_log.txt';
+                link.click();
+            }
+        };
+
+        xhr.send();
+          // Check the visibility of exportdownloadfile and toggle the download link accordingly
+          var exportDownloadFile = document.getElementById('exportdownloadfile');
+    var downloadLink = document.getElementById('downloadLink');
+
+    if (exportDownloadFile.style.display !== 'none') {
+        downloadLink.style.display = 'inline-block';
+    }
+    
+    }  
 </script>
