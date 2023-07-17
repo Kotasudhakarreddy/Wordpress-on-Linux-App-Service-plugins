@@ -231,7 +231,8 @@
         }
 
         combineChunksWithRetry();
-        updateStatusText(0);
+        // Commenting this for now to avoid getting realtime status
+        //updateStatusText(0);
         return;
       }
 
