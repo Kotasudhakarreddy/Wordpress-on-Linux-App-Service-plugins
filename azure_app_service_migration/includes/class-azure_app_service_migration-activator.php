@@ -30,9 +30,6 @@ class Azure_app_service_migration_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-		// Add status option in Database
-		$status_option_value = array( 'type' => 'done', 'title' => 'initialize', 'message' => 'Initial Migration option' );
-		Azure_app_service_migration_Custom_Logger::update_migration_status($status_option_value);
 	}
 
 }

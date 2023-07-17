@@ -1,6 +1,7 @@
 <?php
 class Azure_app_service_migration_Import_AjaxHandler {
     
+    // To Do: This function is redundant if realtime status is not implemented.
     public function get_migration_status() {
         if ( ! headers_sent() ) {
             header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset', 'utf-8' ) );

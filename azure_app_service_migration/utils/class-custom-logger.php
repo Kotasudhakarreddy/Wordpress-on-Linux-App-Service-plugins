@@ -38,43 +38,14 @@ class Azure_app_service_migration_Custom_Logger
         file_put_contents($log_file, $log_message . PHP_EOL, FILE_APPEND);
     }
 
-    // Log the user registration event
-    public static function log_user_registration($user_id)
-    {
-        $username = get_user_by('id', $user_id)->user_login;
-        $message = "User '{$username}' registered successfully.";
-        self::writeToLog($message);
-    }
-
     // Custom error handler
-    public static function handleError($severity, $message, $should_update_status_option = false)
-    {
-        // Get the current date and time
-        $current_time = date('Y-m-d H:i:s');
-        $error_message = "Error [{$current_time}]: {$severity} {$message}";
-        self::writeToLog($error_message);
-        
-        // Update AASM_MIGRATION_STATUS option in Database
-        if ($should_update_status_option)
-        {
-            $migration_status = array( 'type' => 'error', 'title' => $severity, 'message' => $message );
-        }
-    }
-
-    // Custom error handler
+    // To Do: Remove $should_update_status_option parameter
     public static function logInfo($service_type, $message, $should_update_status_option = false)
     {
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
         $info_message = "AASM_LOG [{$current_time}]: {$service_type} {$message}";
         self::writeToLog($info_message);
-        
-        // Update AASM_MIGRATION_STATUS option in Database
-        if ($should_update_status_option)
-        {
-            $migration_status = array( 'type' => 'status', 'title' => $service_type, 'message' => $message );
-            self::update_migration_status($migration_status);
-        }
     }
 
     // Custom error handler
@@ -84,10 +55,6 @@ class Azure_app_service_migration_Custom_Logger
         $current_time = date('Y-m-d H:i:s');
         $info_message = "AASM_LOG [{$current_time}]: {$service_type} Finished.";
         self::writeToLog($info_message);
-        
-        // Update AASM_MIGRATION_STATUS option in Database
-        $migration_status = array( 'type' => 'done', 'title' => $service_type, 'message' => $service_type . ' Successful.' );
-        self::update_migration_status($migration_status);
     }
 
     // Custom exception handler
