@@ -1,6 +1,8 @@
 <div class="col-md-11 mt-5">
   <div class="shadow p-3 mb-5 bg-body rounded">
-    <div class="shadow-sm p-4 mb-4 bg-white boderbottom"><h5>Import Content</h5></div>
+    <div class="shadow-sm p-4 mb-4 bg-white border-bottom">
+      <h5>Import Content</h5>
+    </div>
     <div id="filestatus" class="text-center"></div>
     <form id="frm-Import-file" enctype="multipart/form-data">
       <div id="dropzone" onclick="document.getElementById('importFile').click();" ondragover="handleDragOver(event);" ondragleave="handleDragLeave(event);" ondrop="handleDrop(event);" style="cursor: pointer;">
@@ -14,9 +16,14 @@
         <button type="button" class="btn btn-primary" id="importfile" onclick="handleImport()">Import</button>
       </div>
     </form>
-    <div style="margin-top: 20px;">
+    <div class="form-group">
       <input type="checkbox" name="caching_cdn" id="caching_cdn" value="caching_cdn" style="margin-right: 8px; transform: scale(0.8);">
       <label for="caching_cdn" style="font-size: 14px;">Re-enable caching and/or CDN/AFD features</label>
+    </div>
+    <br>
+    <div id="runTimeLogContainer" class="form-group" style="display: none;">
+      <label for="runTimeLogTextarea" style="font-size: 14px;">Runtime Import Log</label>
+      <textarea class="form-control" id="runTimeLogTextarea" rows="5"></textarea>
     </div>
   </div>
 </div>
@@ -82,7 +89,7 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
   console.log('chunks', chunks);
 
   fileInfo.textContent = 'Importing...'; // Update the file info text
-
+  document.getElementById('runTimeLogContainer').style.display = 'block';
   var index = 0;
 
   uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index);
