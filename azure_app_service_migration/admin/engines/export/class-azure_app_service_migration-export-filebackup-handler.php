@@ -2,6 +2,14 @@
 <?php
 class Azure_app_service_migration_Export_FileBackupHandler
 {
+    private $logFilePath;
+
+    public function __construct()
+    {
+        $this->logFilePath = AASM_LOG_FILE_LOCATION . 'export_log.txt';
+
+    }
+
     public function handle_wp_filebackup()
     {
         $param = isset($_REQUEST['param']) ? $_REQUEST['param'] : "";
@@ -14,14 +22,23 @@ class Azure_app_service_migration_Export_FileBackupHandler
                 $dontexptmustuseplugins = isset($_REQUEST['dontexptmustuseplugs']) ? $_REQUEST['dontexptmustuseplugs'] : "";
                 $dontexptplugins = isset($_REQUEST['dontexptplugins']) ? $_REQUEST['dontexptplugins'] : "";
                 $dontdbsql = isset($_REQUEST['donotdbsql']) ? $_REQUEST['donotdbsql'] : "";
-
+                error_log('Deleting the previously generated log file export_log.txt ' . "\n", 3, $this->logFilePath);
+                //delete the log
+                AASM_Logger_Helper::delete_log_file($this->logFilePath);
+                //create a Log file
+                AASM_Logger_Helper::create_log_file($this->logFilePath);
+                error_log('Started with the export process: ' . "\n", 3, $this->logFilePath);
                 $zipFileName = $this->generateZipFileName();
+                error_log('Zip file name is generated as : ' . $zipFileName . "\n", 3, $this->logFilePath);
                 $zipFilePath = $this->getZipFilePath($zipFileName);
+                error_log('Zip file path is : ' . $zipFilePath . "\n", 3, $this->logFilePath);
                 $excludedFolders = $this->getExcludedFolders($dontexptsmedialibrary, $dontexptsthems, $dontexptmustuseplugins, $dontexptplugins);
 
+                error_log('Deleting the previously generated exported file ' . "\n", 3, $this->logFilePath);
                 $this->deleteExistingZipFiles();
+                error_log('Started generating the ZipArchive for ' . $zipFileName . "\n", 3, $this->logFilePath);
                 $zipCreated = $this->createZipArchive($zipFilePath, $excludedFolders, $dontdbsql, $password, $dontexptpostrevisions);
-
+                error_log('Completed generating the ZipArchive for ' . $zipFileName . "\n", 3, $this->logFilePath);
                 if ($zipCreated) {
                     echo json_encode(array(
                         "status" => 1,
@@ -35,11 +52,6 @@ class Azure_app_service_migration_Export_FileBackupHandler
                 }
             }
         }
-
-        $error_message = 'An error occurred during the backup process.';
-        $plugin_log_file = plugin_dir_path(dirname(__FILE__)) . 'debug.log';
-        error_log($error_message, 3, $plugin_log_file);
-
     }
 
     private function generateZipFileName()
@@ -51,8 +63,8 @@ class Azure_app_service_migration_Export_FileBackupHandler
 
     private function getZipFilePath($zipFileName)
     {
-         // Create the directory if it doesn't exist
-         if (!is_dir(AASM_EXPORT_ZIP_LOCATION)) {
+        // Create the directory if it doesn't exist
+        if (!is_dir(AASM_EXPORT_ZIP_LOCATION)) {
             mkdir(AASM_EXPORT_ZIP_LOCATION, 0777, true);
             // Set appropriate permissions for the directory (0777 allows read, write, and execute permissions for everyone)
         }
@@ -88,6 +100,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
                     unlink($filePath);
                 }
             }} catch (Exception $e) {
+            error_log('File Delete error: ' . $e->getMessage(), 3, $this->logFilePath);
             throw new AASM_File_Delete_Exception('File Delete error:' . $e->getMessage());
         }
     }
@@ -117,12 +130,14 @@ class Azure_app_service_migration_Export_FileBackupHandler
 
                     $zip->close();
                     $zipCreated = true;
+                    error_log('Zip Archive closed successfully.' . "\n", 3, $this->logFilePath);
                 } else {
                     $retryCount++;
                     sleep($retryDelay);
                 }
             }
         } catch (Exception $e) {
+            error_log('Zip creation error: ' . $e->getMessage(), 3, $this->logFilePath);
             throw new AASM_Archive_Exception('Zip creation error:' . $e->getMessage());
         }
         return $zipCreated;
@@ -134,6 +149,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
         $tablesQuery = "SHOW TABLES";
         $tables = $wpdb->get_results($tablesQuery, ARRAY_N);
         try {
+            $currentTable = null;
             foreach ($tables as $table) {
                 $tableName = $table[0];
                 $structureQuery = "SHOW CREATE TABLE {$tableName}";
@@ -146,9 +162,15 @@ class Azure_app_service_migration_Export_FileBackupHandler
                     $zip->setEncryptionName($wpDBFolderNameInZip . $structureFilename, ZipArchive::EM_AES_256, $password);
                 }
 
+                if ($currentTable !== $tableName) {
+                    $currentTable = $tableName;
+                    error_log('Exporting Schema for table : ' . $currentTable . "\n", 3, $this->logFilePath);
+                }
+
                 $this->exportTableRecords($wpdb, $tableName, $zip, $wpDBFolderNameInZip, $password, $dontexptpostrevisions);
             }
         } catch (Exception $e) {
+            error_log('DB Tables export exception: ' . $e->getMessage(), 3, $this->logFilePath);
             throw new AASM_Export_Exception('DB Tables export exception:' . $e->getMessage());
         }
     }
@@ -159,6 +181,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
         $offset = 0;
         $batchNumber = 1;
         try {
+            error_log('Exporting Records for table : ' . $tableName . '-started' . "\n", 3, $this->logFilePath);
             do {
                 if ($dontexptpostrevisions && $tableName == 'wp_posts') {
                     $recordsQuery = "SELECT * FROM {$tableName} WHERE post_type != 'revision' LIMIT {$offset}, {$batchSize}";
@@ -179,7 +202,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
                             $recordValues[] = $this->formatRecordValue($value);
                         }
 
-                        $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");" . AASM_DB_RECORDS_QUERY_SEPARATOR ."\n";
+                        $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");\n";
                     }
 
                     if ($batchNumber === 1) {
@@ -196,7 +219,9 @@ class Azure_app_service_migration_Export_FileBackupHandler
                 $offset += $batchSize;
                 $batchNumber++;
             } while (!empty($records));
+            error_log('Exporting Records for table : ' . $tableName . '-completed' . "\n", 3, $this->logFilePath);
         } catch (Exception $e) {
+            error_log('Table records export exception: ' . $e->getMessage(), 3, $this->logFilePath);
             throw new AASM_Export_Exception('Table records export exception:' . $e->getMessage());
         }
 
@@ -204,30 +229,35 @@ class Azure_app_service_migration_Export_FileBackupHandler
 
     private function formatRecordValue($value)
     {
-        if (is_null($value)) {
-            return "NULL";
-        } elseif (is_int($value) || is_float($value) || is_numeric($value)) {
-            return $value;
-        } elseif (is_bool($value)) {
-            return $value ? 'TRUE' : 'FALSE';
-        } elseif (is_object($value) || is_array($value)) {
-            return "'" . addslashes(serialize($value)) . "'";
-        } elseif (is_string($value)) {
-            if (is_numeric($value)) {
+        try {
+            if (is_null($value)) {
+                return "NULL";
+            } elseif (is_int($value) || is_float($value) || is_numeric($value)) {
                 return $value;
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
-                return "'" . $value . "'";
-            } elseif (preg_match('/^\d{2}:\d{2}:\d{2}$/', $value)) {
-                return "'" . $value . "'";
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $value)) {
-                return "'" . $value . "'";
-            } elseif (is_numeric($value) && (strpos($value, '.') !== false || strpos($value, 'e') !== false)) {
-                return $value;
+            } elseif (is_bool($value)) {
+                return $value ? 'TRUE' : 'FALSE';
+            } elseif (is_object($value) || is_array($value)) {
+                return "'" . addslashes(serialize($value)) . "'";
+            } elseif (is_string($value)) {
+                if (is_numeric($value)) {
+                    return $value;
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                    return "'" . $value . "'";
+                } elseif (preg_match('/^\d{2}:\d{2}:\d{2}$/', $value)) {
+                    return "'" . $value . "'";
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $value)) {
+                    return "'" . $value . "'";
+                } elseif (is_numeric($value) && (strpos($value, '.') !== false || strpos($value, 'e') !== false)) {
+                    return $value;
+                } else {
+                    return "'" . addslashes($value) . "'";
+                }
             } else {
                 return "'" . addslashes($value) . "'";
             }
-        } else {
-            return "'" . addslashes($value) . "'";
+        } catch (Exception $e) {
+            error_log('Table record format exception: ' . $e->getMessage(), 3, $this->logFilePath);
+            throw new AASM_Export_Exception('Table record format exception:' . $e->getMessage());
         }
     }
 
@@ -244,6 +274,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
             $cntbatchSize = 100;
             $batchNumber = 1;
             $currentBatchFiles = [];
+            $currentFolder = null; // Variable to track the current folder being processed
 
             foreach ($files as $name => $file) {
                 if (!$file->isDir()) {
@@ -253,6 +284,12 @@ class Azure_app_service_migration_Export_FileBackupHandler
                         'path' => $filePath,
                         'relativePath' => $relativePath,
                     ];
+
+                    $folder = $relativePath;
+                    if ($currentFolder !== $folder) {
+                        $currentFolder = $folder;
+                        error_log('Exporting from wp-content path: ' . $currentFolder . "\n", 3, $this->logFilePath);
+                    }
 
                     if (count($currentBatchFiles) >= $cntbatchSize) {
                         $this->addFilesToZipBatch($zip, $currentBatchFiles, $wpContentFolderNameInZip, $password, $batchNumber);
@@ -266,7 +303,8 @@ class Azure_app_service_migration_Export_FileBackupHandler
                 $this->addFilesToZipBatch($zip, $currentBatchFiles, $wpContentFolderNameInZip, $password, $batchNumber);
             }
         } catch (Exception $e) {
-            throw new AASM_Archive_Exception('Failing to add the file to ZipArchive:' . $e->getMessage());
+            error_log('Failing to add the file to ZipArchive: ' . $e->getMessage(), 3, $this->logFilePath);
+            throw new AASM_Archive_Exception('Failing to add the file to ZipArchive: ' . $e->getMessage());
         }
     }
 
@@ -308,6 +346,7 @@ class Azure_app_service_migration_Export_FileBackupHandler
                 }
             }
         } catch (Exception $e) {
+            error_log('Failing to add the file to ZipArchive during batch: ' . $e->getMessage(), 3, $this->logFilePath);
             throw new AASM_Archive_Exception('Failing to add the file to ZipArchive during batch:' . $e->getMessage());
         }
     }
