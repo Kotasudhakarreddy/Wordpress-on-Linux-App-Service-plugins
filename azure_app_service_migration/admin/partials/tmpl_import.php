@@ -16,7 +16,7 @@
     </form>
     <div style="margin-top: 20px;">
       <input type="checkbox" name="caching_cdn" id="caching_cdn" value="caching_cdn" style="margin-right: 8px; transform: scale(0.8);">
-      <label for="caching_cdn" style="font-size: 14px;">Re-enable caching and/or CDN/AFD features</label>
+      <label for="caching_cdn" style="font-size: 14px;">Re-enable caching and CDN / Blob Storage features</label>
     </div>
   </div>
 </div>
