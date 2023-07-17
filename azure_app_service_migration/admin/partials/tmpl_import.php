@@ -181,19 +181,6 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
 
     
   }
-/*
-  var formData = new FormData();
-  formData.append('param', 'wp_ImportFile');
-
-  var file = fileInput.files[0];
-  var chunkSize = <?php echo $reducedSize; ?> * 1024 * 1024;
-  var chunks = splitFile(file, chunkSize);
-  console.log('chunks', chunks);
-
-  fileInfo.textContent = 'Importing...'; // Update the file info text
-
-  var index = 0;
-*/
 
 function uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index) {
   if (!chunks || index >= chunks.length) {
