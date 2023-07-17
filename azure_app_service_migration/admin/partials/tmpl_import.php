@@ -15,8 +15,8 @@
       </div>
     </form>
     <div style="margin-top: 20px;">
-      <input type="checkbox" name="caching_cdn" id="caching_cdn" value="caching_cdn" style="margin-right: 8px; transform: scale(0.8);">
-      <label for="caching_cdn" style="font-size: 14px;">Re-enable caching and CDN / Blob Storage features</label>
+      <input type="checkbox" name="retain_w3tc_config" id="retain_w3tc_config" value="retain_w3tc_config" style="margin-right: 8px; transform: scale(0.8);">
+      <label for="retain_w3tc_config" style="font-size: 14px;">Re-enable caching and CDN / Blob Storage features</label>
     </div>
   </div>
 </div>
@@ -185,7 +185,7 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
 function uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index) {
   if (!chunks || index >= chunks.length) {
     // Perform further actions after all chunks are uploaded
-    var cachingCdnCheckbox = document.getElementById('caching_cdn');
+    var w3tc_checkbox = document.getElementById('retain_w3tc_config');
 
     var retries = 0;
     var maxRetries = 3;
@@ -193,7 +193,7 @@ function uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index) {
 
     combineChunksWithRetry(
       ajaxurl,
-      cachingCdnCheckbox,
+      w3tc_checkbox,
       formData,
       fileInfo,
       retries,
@@ -228,7 +228,7 @@ function uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index) {
 
 function combineChunksWithRetry(
   ajaxurl,
-  cachingCdnCheckbox,
+  w3tc_checkbox,
   formData,
   fileInfo,
   retries,
@@ -241,7 +241,7 @@ function combineChunksWithRetry(
     data: {
       action: 'handle_combine_chunks',
       param: 'wp_ImportFile',
-      caching_cdn: cachingCdnCheckbox.checked,
+      retain_w3tc_config: w3tc_checkbox.checked,
     },
     success: function (response) {
       console.log(response);
@@ -258,7 +258,7 @@ function combineChunksWithRetry(
         setTimeout(function () {
           combineChunksWithRetry(
             ajaxurl,
-            cachingCdnCheckbox,
+            w3tc_checkbox,
             formData,
             fileInfo,
             retries,
