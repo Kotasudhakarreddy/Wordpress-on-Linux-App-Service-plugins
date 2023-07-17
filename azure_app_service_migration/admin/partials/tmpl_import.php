@@ -1,6 +1,6 @@
 <div class="col-md-11 mt-5">
   <div class="shadow p-3 mb-5 bg-body rounded">
-    <div class="shadow-sm p-4 mb-4 bg-white boderbottom">Import Content</div>
+    <div class="shadow-sm p-4 mb-4 bg-white boderbottom"><h5>Import Content</h5></div>
     <div id="filestatus" class="text-center"></div>
     <form id="frm-Import-file" enctype="multipart/form-data">
       <div id="dropzone" onclick="document.getElementById('importFile').click();" ondragover="handleDragOver(event);" ondragleave="handleDragLeave(event);" ondrop="handleDrop(event);" style="cursor: pointer;">

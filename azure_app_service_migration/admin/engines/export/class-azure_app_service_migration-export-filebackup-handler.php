@@ -25,12 +25,12 @@ class Azure_app_service_migration_Export_FileBackupHandler
                 if ($zipCreated) {
                     echo json_encode(array(
                         "status" => 1,
-                        "message" => "ZIP archive created successfully.",
+                        "message" => "Content is exported and Ready to download",
                     ));
                 } else {
                     echo json_encode(array(
                         "status" => 0,
-                        "message" => "Failed to create ZIP after maximum retries.",
+                        "message" => "Failed to export after maximum retries.",
                     ));
                 }
             }
