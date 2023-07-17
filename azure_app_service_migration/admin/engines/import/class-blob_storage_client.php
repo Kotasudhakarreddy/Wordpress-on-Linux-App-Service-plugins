@@ -21,10 +21,15 @@ class AASM_Blob_Storage_Client {
                     : $file_path;
 
         // TO DO: Include Blob storage library for exceptions and add exception handling here 
-        $blob_storage_client->createBlockBlob($blob_container, $blob_name, $file_path);
+        try {
+            $blob_storage_client->createBlockBlob($blob_container, $blob_name, $file_path);
+        } catch( Exception $ex) {
+            Azure_app_service_migration_Custom_Logger::handleException($ex, false);
+        }
     }
 
     public static function get_blob_storage_settings() {
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Retrieving Azure Storage account credentials.', true);
         $w3tc_config_filepath = AASM_W3TC_CONFIG_MASTER_PATH;
         
         // Return empty array if w3tc config file not found
@@ -52,9 +57,11 @@ class AASM_Blob_Storage_Client {
             || is_null($storage_account_container) 
             || $cdn_engine != "azure")
         {
+            Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Failed to retrieve Azure Blob Storage Settings.', true);
             return [];
         }
-    
+        
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Successfully retrieved Azure Storage account credentials.', true);
         // Return an array of blob storage values
         return [
             'storage_account' => $storage_account,

@@ -30,7 +30,6 @@ class Azure_app_service_migration_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-
 	}
 
 }

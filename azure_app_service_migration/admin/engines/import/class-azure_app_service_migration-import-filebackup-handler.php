@@ -12,6 +12,8 @@ class Azure_app_service_migration_Import_FileBackupHandler
         $param = isset($_POST['param']) ? $_POST['param'] : "";
 
         if (!empty($param) && $param === "wp_ImportFile_chunks") {
+            Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Uploading zip file.', true);
+            
             $fileChunk = $_FILES['fileChunk'];
             $uploadDir = AASM_IMPORT_ZIP_LOCATION;
             // Create the directory if it doesn't exist
@@ -76,7 +78,7 @@ class Azure_app_service_migration_Import_FileBackupHandler
         ignore_user_abort(true);
 
         $param = isset($_POST['param']) ? $_POST['param'] : "";
-        $cachingCdnValue = isset($_POST['caching_cdn']) ? $_POST['caching_cdn'] : "";
+        $retain_w3tc_config_value = isset($_POST['retain_w3tc_config']) ? $_POST['retain_w3tc_config'] : "";
 
         if (!empty($param) && $param === "wp_ImportFile") {
             // Handle the combine chunks action here
@@ -131,9 +133,9 @@ class Azure_app_service_migration_Import_FileBackupHandler
                 file_put_contents($counterFilePath, '-1');
                 // Perform any further actions after combining the chunks
                 
-                // Create the $params array and assign the value of $cachingCdnValue
+                // Create the $params array and assign the value of $retain_w3tc_config_value
                 $params = array(
-                    'caching_cdn' => $cachingCdnValue,
+                    'retain_w3tc_config' => $retain_w3tc_config_value,
                 );
                 // Call the import() method and pass the $params variable
                 Azure_app_service_migration_Import_Controller::import($params, $filePath);

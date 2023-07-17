@@ -15,8 +15,8 @@
       </div>
     </form>
     <div style="margin-top: 20px;">
-      <input type="checkbox" name="caching_cdn" id="caching_cdn" value="caching_cdn" style="margin-right: 8px; transform: scale(0.8);">
-      <label for="caching_cdn" style="font-size: 14px;">Re-enable caching and/or CDN/AFD features</label>
+      <input type="checkbox" name="retain_w3tc_config" id="retain_w3tc_config" value="retain_w3tc_config" style="margin-right: 8px; transform: scale(0.8);">
+      <label for="retain_w3tc_config" style="font-size: 14px;">Re-enable caching and CDN / Blob Storage features</label>
     </div>
   </div>
 </div>
@@ -63,37 +63,129 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
     }
   }
 
-  function handleImport() {
-  var ajaxurl = azure_app_service_migration.ajaxurl;
-  var fileInput = document.getElementById('importFile');
-  var fileInfo = document.getElementById('fileInfo');
-  if (fileInput.files.length === 0) {
-    fileInfo.textContent = 'Please select a file to import.';
-    document.getElementById('dropzone').classList.add('error');
-    return;
+  // To Do: Commenting out this function for now since it may prevent Import/Export in some cases
+    /*function verifyMigrationStatus(retryCount) {
+      // Set max retry count for getting status from server
+      maxRetryCount = 5;
+
+      $.ajax({
+        url: ajaxurl,
+        type: 'POST',
+        dataType: 'json',
+        data: {
+          action: 'get_migration_status', // Adjust the server-side action name
+        },
+        success: function(response) {
+          // Handle the success response after combining the chunks
+          console.log(response);
+          
+          // To Do (Sudhakar): Display popup message here when import/export already in progress
+          // Currently updating the statusText Value
+          if (response.type == 'status')
+          {
+            // Update status text value
+            statusText.textContent = 'Import/Export process is already running on the server! Please wait a while and try again.';
+          }
+          else
+          {
+            // Update status text value
+            statusText.textContent = 'Starting Migration.';
+
+            // Start Import process (with uploading zip file) if there is no Import/Export in progress
+            document.getElementById('progressBarContainer').style.display = 'block'; // Display the progress bar
+            uploadChunkWithRetry();
+          }
+        },
+        error: function(xhr, status, error) {
+          // Retry the updateStatus call if the maximum number of retries is not reached
+          if (retryCount < maxRetryCount) {
+            updateStatusText(retryCount+1);
+          } else {
+            // Max retries reached, display error message
+            statusText.textContent = 'Failed to connect to server. Import can still be in progress';
+          }
+        }
+      });
+    }
+    */
+
+  // Makes a GET request to the server to get IMPORT status
+  function updateStatusText(retryCount) {
+    // Set max retry count for getting status from server
+    maxRetryCount = 15;
+
+    $.ajax({
+      url: ajaxurl,
+      type: 'POST',
+      dataType: 'json',
+      data: {
+        action: 'get_migration_status', // Adjust the server-side action name
+      },
+      success: function(response) {
+        // Handle the success response after combining the chunks
+        console.log(response);
+        
+        // To Do (Sudhakar): Display response.message in status box.
+        // Currently updating a text field (statusText) in the page. 
+        
+        // Update status text value
+        statusText.textContent = response.message;
+        
+        // Call updateStatusText recursively only if migration is still in progress
+        if (response.type == 'status')
+        {
+          updateStatusText(0);
+          return;
+        }
+      },
+      error: function(xhr, status, error) {
+        // Handle the error response
+        console.log(error);
+
+        // Retry the updateStatus call if the maximum number of retries is not reached
+        if (retryCount < maxRetryCount) {
+          updateStatusText(retryCount+1);
+        } else {
+          // Max retries reached, display error message
+          statusText.textContent = 'Failed to connect to server. Import can still be in progress';
+        }
+      }
+    });
   }
 
-  var formData = new FormData();
-  formData.append('param', 'wp_ImportFile');
+  function handleImport() {
+    var ajaxurl = azure_app_service_migration.ajaxurl;
+    var fileInput = document.getElementById('importFile');
+    var fileInfo = document.getElementById('fileInfo');
+    if (fileInput.files.length === 0) {
+      fileInfo.textContent = 'Please select a file to import.';
+      document.getElementById('dropzone').classList.add('error');
+      return;
+    }
 
-  var file = fileInput.files[0];
-  var chunkSize = <?php echo $reducedSize; ?> * 1024 * 1024;
-  var chunks = splitFile(file, chunkSize);
-  console.log('chunks', chunks);
+    var formData = new FormData();
+    formData.append('param', 'wp_ImportFile');
 
-  fileInfo.textContent = 'Importing...'; // Update the file info text
+    var file = fileInput.files[0];
+    var chunkSize = 5 * 1024 * 1024; // 5MB chunk size
+    var chunks = splitFile(file, chunkSize);
 
-  var index = 0;
+    fileInfo.textContent = 'Importing...'; // Update the file info text
 
-  uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index);
+    var index = 0;
 
-  document.getElementById('progressBarContainer').style.display = 'block'; // Display the progress bar
-}
+    
+    uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index);
+
+    document.getElementById('progressBarContainer').style.display = 'block'; // Display the progress bar
+
+    
+  }
 
 function uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index) {
   if (!chunks || index >= chunks.length) {
     // Perform further actions after all chunks are uploaded
-    var cachingCdnCheckbox = document.getElementById('caching_cdn');
+    var w3tc_checkbox = document.getElementById('retain_w3tc_config');
 
     var retries = 0;
     var maxRetries = 3;
@@ -101,7 +193,7 @@ function uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index) {
 
     combineChunksWithRetry(
       ajaxurl,
-      cachingCdnCheckbox,
+      w3tc_checkbox,
       formData,
       fileInfo,
       retries,
@@ -136,7 +228,7 @@ function uploadChunkWithRetry(ajaxurl, chunks, formData, fileInfo, index) {
 
 function combineChunksWithRetry(
   ajaxurl,
-  cachingCdnCheckbox,
+  w3tc_checkbox,
   formData,
   fileInfo,
   retries,
@@ -149,7 +241,7 @@ function combineChunksWithRetry(
     data: {
       action: 'handle_combine_chunks',
       param: 'wp_ImportFile',
-      caching_cdn: cachingCdnCheckbox.checked,
+      retain_w3tc_config: w3tc_checkbox.checked,
     },
     success: function (response) {
       console.log(response);
@@ -166,7 +258,7 @@ function combineChunksWithRetry(
         setTimeout(function () {
           combineChunksWithRetry(
             ajaxurl,
-            cachingCdnCheckbox,
+            w3tc_checkbox,
             formData,
             fileInfo,
             retries,

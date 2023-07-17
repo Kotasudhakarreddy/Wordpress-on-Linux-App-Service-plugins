@@ -2,26 +2,19 @@
 // CustomLogger.php
 
 class Azure_app_service_migration_Custom_Logger
-{   
-
-    // Handle uncaught exceptions and log them
-    public static function handleUncaughtException($exception)
+{
+    // Initialize the custom logging functionality
+    public static function init()
     {
-        // Get the exception details
-        $message = 'Uncaught Exception: ' . $exception->getMessage();
-        $file = $exception->getFile();
-        $line = $exception->getLine();
-        $trace = $exception->getTraceAsString();
+        // Initialize log file
+        $log_file = AASM_IMPORT_LOGFILE_PATH;
+        $log_file_dir = dirname(AASM_IMPORT_LOGFILE_PATH);
+        if (!file_exists($log_file_dir))
+        {
+            mkdir($log_file_dir, 0777, true);
+        }
 
-        // Build the log message with details
-        $log_message = "Uncaught Exception:\n";
-        $log_message .= "Message: {$message}\n";
-        $log_message .= "File: {$file}\n";
-        $log_message .= "Line: {$line}\n";
-        $log_message .= "Trace:\n{$trace}";
-
-        // Log the exception details
-        self::writeToLog($log_message);
+        file_put_contents($log_file, 'Azure App Service Migration IMPORT Logs' . PHP_EOL . PHP_EOL);
     }
 
     // Write log messages to the custom log file
@@ -29,7 +22,8 @@ class Azure_app_service_migration_Custom_Logger
     public static function writeToLog($status, $message = '', $service_type = '')
     {
         // Define the log file path and name
-        $log_file = WP_PLUGIN_DIR .'/azure_app_service_migration' . '/azure_app_service_migration-plugin-log.txt';
+        $log_file = AASM_IMPORT_LOGFILE_PATH;
+
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
 
@@ -37,39 +31,46 @@ class Azure_app_service_migration_Custom_Logger
         $log_message = "[{$current_time}] {$service_type} {$status} {$message}" . PHP_EOL;
 
         // Append the log message to the log file
-        file_put_contents($log_file, $log_message, FILE_APPEND);
-    }
-
-    // Initialize the custom logging functionality
-    public static function init()
-    {
-        // Hook the log_user_registration function to the user_register action
-        add_action('user_register', array('Azure_app_service_migration_Custom_Logger', 'log_user_registration'), 10, 1);
-
-        // Set up error and exception handling
-        set_error_handler(array('Azure_app_service_migration_Custom_Logger', 'handleError'));
-        set_exception_handler(array('Azure_app_service_migration_Custom_Logger', 'handleException'));
-    }
-
-    // Log the user registration event
-    public static function log_user_registration($user_id)
-    {
-        $username = get_user_by('id', $user_id)->user_login;
-        $message = "User '{$username}' registered successfully.";
-        self::writeToLog($message);
+        file_put_contents($log_file, $log_message . PHP_EOL, FILE_APPEND);
     }
 
     // Custom error handler
-    public static function handleError($severity, $message, $file, $line)
+    // To Do: Remove $should_update_status_option parameter
+    public static function logInfo($service_type, $message, $should_update_status_option = false)
     {
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
-        $error_message = "Error [{$current_time}]: {$severity} {$message} in {$file} on line {$line}";
+        $info_message = "AASM_LOG: [{$current_time}]: {$service_type} {$message}";
+        self::writeToLog($info_message);
+    }
+
+    public static function logError($service_type, $message, $echo_status = true)
+    {
+        // Get the current date and time
+        $current_time = date('Y-m-d H:i:s');
+        $error_message = "AASM_ERROR: [{$current_time}]: {$service_type} {$message}";
         self::writeToLog($error_message);
+
+        // echo status to return to server
+        if ($echo_status) {
+            $migration_status = array( 'status' => 'error', 'message' => $error_message );
+            echo json_encode($migration_status);
+
+            wp_die();
+        }
+    }
+
+    // Custom error handler
+    public static function done($service_type)
+    {
+        // Get the current date and time
+        $current_time = date('Y-m-d H:i:s');
+        $info_message = "AASM_LOG [{$current_time}]: {$service_type} Finished.";
+        self::writeToLog($info_message);
     }
 
     // Custom exception handler
-    public static function handleException($exception)
+    public static function handleException($exception, $echo_status = true)
     {
         // Get the exception details
         $message = 'Exception: ' . $exception->getMessage();
@@ -78,7 +79,7 @@ class Azure_app_service_migration_Custom_Logger
         $trace = $exception->getTraceAsString();
 
         // Build the log message with details
-        $log_message = "Uncaught Exception:\n";
+        $log_message = "Exception:\n";
         $log_message .= "Message: {$message}\n";
         $log_message .= "File: {$file}\n";
         $log_message .= "Line: {$line}\n";
@@ -86,6 +87,19 @@ class Azure_app_service_migration_Custom_Logger
 
         // Log the exception details
         self::writeToLog($log_message);
+
+        if ($echo_status) {
+            // echo status to return to server
+            $migration_status = array( 'status' => 'exception', 'message' => $log_message );
+            echo json_encode($migration_status);
+
+            wp_die();
+        }
+    }
+
+    public static function update_migration_status($data)
+    {
+        update_option( AASM_MIGRATION_STATUS, $data );
     }
 }
 

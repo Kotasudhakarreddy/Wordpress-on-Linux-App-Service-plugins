@@ -5,6 +5,7 @@ class AASM_Database_Manager {
     }
 
     public function create_database($databaseName) {
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Creating new database.', true);
         global $wpdb;
         $charsetCollate = $wpdb->get_charset_collate();
         $query = "CREATE DATABASE $databaseName $charsetCollate;";
@@ -26,19 +27,22 @@ class AASM_Database_Manager {
     public function run_query($databaseName, $query) {
         global $wpdb;
         $wpdb->select($databaseName);
-        return $wpdb->query($query) !== false;
+        return $wpdb->get_results($query);
     }
 
     public function import_sql_file($databaseName, $sqlFilePath) {
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Importing sql file ' . basename($sqlFilePath) . ' to new database', true);
+        
         global $wpdb;
         $wpdb->select($databaseName);
         
         // Temporary variable, used to store current query
         $templine = '';
+        
         // Read in entire file
         $lines = file($sqlFilePath);
+        
         // Loop through each line
-
         foreach ($lines as $index => $line)
         {
             // Add this line to the current segment
@@ -52,8 +56,10 @@ class AASM_Database_Manager {
                             : $templine;
 
                 // Perform the query
-                $wpdb->query($templine);
-                
+                if ($wpdb->query($templine) == false) {
+                    return false;
+                }
+
                 // Reset temp variable to empty
                 $templine = '';
             }
