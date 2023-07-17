@@ -15,8 +15,12 @@ jQuery(function ($) {
 	  //$("body").addClass("loading");
 	  $("#blinkdata").show();
 	}
+	var blinkInterval;
+	var blinkTimeout;
 	// Processing event on button click
 	$("#generatefile").click(function () {
+		
+		stopBlinking($("#exportdownloadfile"));
 	  // Hide the exportdownloadfile element
 	  $("#exportdownloadfile").hide();
   
@@ -53,25 +57,33 @@ jQuery(function ($) {
 	
   
 	function blinkElement(selector) {
-	  var interval = setInterval(function() {
 		var element = $(selector);
 		if (element.length > 0) {
-		  // Clear the interval once the element is available
-		  clearInterval(interval);
 		  // Start the blinking animation
 		  startBlinking(element);
 		}
-	  }, 100); // Adjust the interval as needed
-	}
-	
-	function startBlinking(element) {
-	  var interval = setInterval(function() {
-		element.fadeOut(500, function() {
-		  $(this).fadeIn(500);
-		});
-	  }, 1000); // Adjust the interval as needed
-	}
-	 
+	  }
+	  
+	  function startBlinking(element) {
+		// Set the blink interval
+		blinkInterval = setInterval(function() {
+		  element.fadeOut(500, function() {
+			$(this).fadeIn(500);
+		  });
+		}, 1000); // Adjust the interval as needed
+	  
+		// Schedule the stopBlinking function after 10 seconds
+		blinkTimeout = setTimeout(function() {
+		  stopBlinking(element);
+		}, 10000); // 10 seconds (10000 milliseconds)
+	  }
+
+	  function stopBlinking(element) {
+		// Clear the interval and timeout, and show the element
+		clearInterval(blinkInterval);
+		clearTimeout(blinkTimeout);
+		element.stop().show();
+	  }
 	
 	// Add event listeners for drag and drop functionality
 	$("#dropzone")
