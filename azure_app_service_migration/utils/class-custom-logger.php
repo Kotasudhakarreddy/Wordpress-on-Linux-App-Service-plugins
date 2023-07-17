@@ -65,7 +65,6 @@ class Azure_app_service_migration_Custom_Logger
         if ($should_update_status_option)
         {
             $migration_status = array( 'type' => 'error', 'title' => $severity, 'message' => $message );
-            self::update_migration_status($migration_status);
         }
     }
 
@@ -116,10 +115,6 @@ class Azure_app_service_migration_Custom_Logger
 
         // Log the exception details
         self::writeToLog($log_message);
-
-        // Update AASM_MIGRATION_STATUS option in Database
-        $migration_status = array( 'type' => 'error', 'title' => 'exception', 'message' => $message . ' in file ' . $file . ' at line ' . $line );
-        self::update_migration_status($migration_status);
     }
 
     public static function update_migration_status($data)

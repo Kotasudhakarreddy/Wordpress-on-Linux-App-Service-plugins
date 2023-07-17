@@ -113,7 +113,7 @@
           
           // To Do (Sudhakar): Display popup message here when import/export already in progress
           // Currently updating the statusText Value
-          if (response.type == 'info')
+          if (response.type == 'status')
           {
             // Update status text value
             statusText.textContent = 'Import/Export process is already running on the server! Please wait a while and try again.';
@@ -164,7 +164,7 @@
           statusText.textContent = response.message;
           
           // Call updateStatusText recursively only if migration is still in progress
-          if (response.type == 'info')
+          if (response.type == 'status')
           {
             updateStatusText(0);
             return;
