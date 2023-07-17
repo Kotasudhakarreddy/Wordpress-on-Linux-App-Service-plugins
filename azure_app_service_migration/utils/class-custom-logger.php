@@ -44,8 +44,22 @@ class Azure_app_service_migration_Custom_Logger
     {
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
-        $info_message = "AASM_LOG [{$current_time}]: {$service_type} {$message}";
+        $info_message = "AASM_LOG: [{$current_time}]: {$service_type} {$message}";
         self::writeToLog($info_message);
+    }
+
+    public static function logError($service_type, $message)
+    {
+        // Get the current date and time
+        $current_time = date('Y-m-d H:i:s');
+        $error_message = "AASM_ERROR: [{$current_time}]: {$service_type} {$message}";
+        self::writeToLog($error_message);
+
+        // echo status to return to server
+        $migration_status = array( 'type' => 'error', 'message' => $error_message );
+        echo json_encode($migration_status);
+
+        wp_die();
     }
 
     // Custom error handler
@@ -58,7 +72,7 @@ class Azure_app_service_migration_Custom_Logger
     }
 
     // Custom exception handler
-    public static function handleException($exception)
+    public static function handleException($exception, $echo_status = true)
     {
         // Get the exception details
         $message = 'Exception: ' . $exception->getMessage();
@@ -75,6 +89,14 @@ class Azure_app_service_migration_Custom_Logger
 
         // Log the exception details
         self::writeToLog($log_message);
+
+        if ($echo_status) {
+            // echo status to return to server
+            $migration_status = array( 'type' => 'exception', 'message' => $log_message );
+            echo json_encode($migration_status);
+
+            wp_die();
+        }
     }
 
     public static function update_migration_status($data)

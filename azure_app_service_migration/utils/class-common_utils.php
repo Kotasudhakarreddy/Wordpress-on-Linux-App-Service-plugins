@@ -9,13 +9,7 @@ class AASM_Common_Utils {
 
     public static function delete_file($filePath) {
         if (file_exists($filePath)) {
-            if (unlink($filePath)) {
-                echo "File deleted successfully.";
-            } else {
-                echo "Unable to delete the file.";
-            }
-        } else {
-            echo "File does not exist.";
+            unlink($filePath); 
         }
     }
 

@@ -22,7 +22,11 @@ class AASM_Zip_Extractor {
         }
 
         Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Reading Zip file for extracting wp-content.', true);
-        $zip = zip_open($this->zip_path);
+        try {
+            $zip = zip_open($this->zip_path);
+        } catch ( Exception $ex ) {
+            Azure_app_service_migration_Custom_Logger::handleException($ex);
+        }
         
         $count=0;
         while ($zip_entry = zip_read($zip))
@@ -99,7 +103,11 @@ class AASM_Zip_Extractor {
         }
         
         Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Reading zip file to extract database tables and records.', true);
-        $zip = zip_open($this->zip_path);
+        try {
+            $zip = zip_open($this->zip_path);
+        } catch ( Exception $ex ) {
+            Azure_app_service_migration_Custom_Logger::handleException($ex);
+        }
 
         $count=0;
         while ($zip_entry = zip_read($zip))

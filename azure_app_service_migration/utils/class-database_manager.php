@@ -56,8 +56,10 @@ class AASM_Database_Manager {
                             : $templine;
 
                 // Perform the query
-                $wpdb->query($templine);
-                
+                if ($wpdb->query($templine) == false) {
+                    return false;
+                }
+
                 // Reset temp variable to empty
                 $templine = '';
             }
