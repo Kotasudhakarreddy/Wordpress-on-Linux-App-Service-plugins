@@ -169,7 +169,7 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
     formData.append('param', 'wp_ImportFile');
 
     var file = fileInput.files[0];
-    var chunkSize = 5 * 1024 * 1024; // 5MB chunk size
+    var chunkSize = <?php echo $reducedSize; ?> * 1024 * 1024; // 5MB chunk size
     var chunks = splitFile(file, chunkSize);
 
     fileInfo.textContent = 'Importing...'; // Update the file info text
