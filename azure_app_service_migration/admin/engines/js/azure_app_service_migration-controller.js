@@ -19,42 +19,39 @@ jQuery(function ($) {
 	var blinkTimeout;
 	// Processing event on button click
 	$("#generatefile").click(function () {
-		
 		stopBlinking($("#exportdownloadfile"));
-	  // Hide the exportdownloadfile element
-	  $("#exportdownloadfile").hide();
-    $('#downloadLink').hide();
-  
-	  // Disable the button and change text to indicate processing
-	  $(this).prop("disabled", true).text("Generating Export...");
-  
-	  // Form submission
-	  var postdata = $("#frm-chkbox-data").serialize();
-	  postdata += "&action=admin_ajax_request&param=wp_filebackup";
-	  $.post(ajaxurl, postdata, function (response) {
-		var data = $.parseJSON(response);
-		console.log(response);
-		if (data.status == 1) {
-		  alert(data.message);
-		  $("#exportdownloadfile").show();
-      $('#downloadLink').show().css('display', 'inline-block');
-
-		  blinkElement("#exportdownloadfile");
-		  $('#exportdownloadfile').load(window.location.href + ' #exportdownloadfile');
-		} else {
-		  alert(data.message);
-		}
-		// Enable the button and restore original text
-		// $("#generatefile").prop('disabled', false).text('Generate Export File');
-		
-	  })
-		.always(function () {
-		  // Enable the button and restore original text
-		  $("#generatefile").prop("disabled", false).text("Generate Export File");
-		})
-		.fail(function () {
-		  // Enable the button and restore original text on error
-		  $("#generatefile").prop("disabled", false).text("Generate Export File");
+		$("#exportdownloadfile").hide();
+		$('#downloadLink').hide();
+		$(this).prop("disabled", true).text("Generating Export...");
+	
+		var postdata = $("#frm-chkbox-data").serialize();
+		postdata += "&action=admin_ajax_request&param=wp_filebackup";
+	
+		$.ajax({
+			url: ajaxurl,
+			type: "POST",
+			data: postdata,
+			dataType: "json",
+			success: function (data) {
+				console.log(data);
+				if (data.status == 1) {
+					alert(data.message);
+					$("#exportdownloadfile").show();
+					$('#downloadLink').show().css('display', 'inline-block');
+					blinkElement("#exportdownloadfile");
+					$('#exportdownloadfile').load(window.location.href + ' #exportdownloadfile');
+				} else {
+					alert(data.message);
+				}
+			},
+			error: function (jqXHR, textStatus, errorThrown) {
+				console.log("AJAX request failed: " + textStatus + ", " + errorThrown);
+				alert("An error occurred while processing the request.");
+				$('#downloadLink').show().css('display', 'inline-block');;
+			},
+			complete: function () {
+				$("#generatefile").prop("disabled", false).text("Generate Export File");
+			}
 		});
 	});
 	
