@@ -41,7 +41,7 @@
                     </fluent-checkbox>
                 </li>
                 <li>
-                    <fluent-checkbox class="exportdata" name="donotdbsql" id="dbsql" value="donotdbsql">
+                    <fluent-checkbox class="exportdata" name="donotdbsql" id="dbsql" value="donotdbsql" style="display: none;">
                         Do not Export database (SQL)
                     </fluent-checkbox>
                 </li>
