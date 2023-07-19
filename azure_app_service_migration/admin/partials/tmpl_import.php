@@ -13,7 +13,7 @@
         </div>
       </div>
       <div style="text-align: center;">
-        <button type="button" class="btn btn-primary" id="importfile" onclick="handleImport()">Import</button>
+        <button type="button" class="btn btn-primary" id="btnImportfile" onclick="handleImport()">Import</button>
       </div>
     </form>
     <div style="margin-top: 20px;">
@@ -173,7 +173,7 @@ $reducedSize = (int) $trimmedSize * 0.5; // Convert the trimmed size to an integ
     var chunks = splitFile(file, chunkSize);
 
     fileInfo.textContent = 'Importing...'; // Update the file info text
-
+    document.getElementById('btnImportfile').disabled = true;
     var index = 0;
 
     
@@ -248,6 +248,8 @@ function combineChunksWithRetry(
     success: function (response) {
       console.log(response);
       fileInfo.textContent = 'File imported successfully.';
+      var fileInput = document.getElementById('importFile');
+      fileInput.value = '';
       document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
       deleteChunks(); // Delete the chunk files
     },
@@ -274,6 +276,9 @@ function combineChunksWithRetry(
         document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
         deleteChunks(); // Delete the chunk files
       }
+    },    
+    complete: function() {
+      document.getElementById('btnImportfile').disabled = false;
     },
   });
 }
@@ -348,6 +353,7 @@ function uploadChunk(
         fileInfo.textContent =
           'Failed to upload chunk after multiple retries.';
         document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
+        document.getElementById('btnImportfile').disabled = false;
         deleteChunks(); // Delete the chunk files
       }
     },
