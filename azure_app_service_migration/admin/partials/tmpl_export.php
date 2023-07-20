@@ -74,6 +74,12 @@
             ?>
             <div class="overlay"></div>
         </div>
+        <div class="alert-container">
+            <div class="alert-box">
+                <p id="alert-message"></p>
+                <button onclick="hideAlert()">OK</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -117,5 +123,9 @@
         downloadLink.style.display = 'inline-block';
     }
     
-    }  
+    }
+    function hideAlert() {
+		var alertBox = document.querySelector('.alert-container');
+		alertBox.style.visibility = 'hidden';
+	}  
 </script>

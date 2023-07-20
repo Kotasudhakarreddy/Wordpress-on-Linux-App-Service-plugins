@@ -1,14 +1,6 @@
 jQuery(function ($) {
 	var ajaxurl = azure_app_service_migration.ajaxurl;
   
-	$("#blinkdata").hide();  
-  
-	function logCurrentFolder(folder) {
-	  alert(folder);
-	  var logMessage = "Exporting folder: " + folder;
-	  document.getElementById("runtimeLog").value = logMessage;
-	}
-  
 	// Ajax call before function
 	function pagebeforeloadresonse() {
 	  $("#downloadfile").hide();
@@ -35,18 +27,18 @@ jQuery(function ($) {
 			success: function (data) {
 				console.log(data);
 				if (data.status == 1) {
-					alert(data.message);
+					showAlert(data.message);
 					$("#exportdownloadfile").show();
 					$('#downloadLink').show().css('display', 'inline-block');
 					blinkElement("#exportdownloadfile");
 					$('#exportdownloadfile').load(window.location.href + ' #exportdownloadfile');
 				} else {
-					alert(data.message);
+					showAlert(data.message);
 				}
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
 				console.log("AJAX request failed: " + textStatus + ", " + errorThrown);
-				alert("An error occurred while processing the request.");
+				showAlert("An error occurred while processing the request.");
 				$('#downloadLink').show().css('display', 'inline-block');;
 			},
 			complete: function () {
@@ -56,6 +48,13 @@ jQuery(function ($) {
 	});
 	
   
+	function showAlert(message) {
+		var alertBox = document.querySelector('.alert-container');
+		var alertMessage = document.getElementById('alert-message');
+	  
+		alertMessage.textContent = message;
+		alertBox.style.visibility = 'visible';
+	  }
 	function blinkElement(selector) {
 		var element = $(selector);
 		if (element.length > 0) {
