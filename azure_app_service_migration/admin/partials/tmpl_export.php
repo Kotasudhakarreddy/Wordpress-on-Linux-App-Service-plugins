@@ -46,12 +46,15 @@
                     </fluent-checkbox>
                 </li>
             </ul>
-            <fluent-button class="generatefile" name="generatefile" id="generatefile" appearance="accent">
-                Generate Export File
-            </fluent-button>
+            <div>
+                <fluent-button class="generatefile" name="generatefile" id="generatefile" appearance="accent">
+                    Generate Export File
+                </fluent-button>
+            </div>
+            <br>
             <div id="downloadLink" style="display:none;">
-            <a href="#" onclick="downloadLogFile()" >Download Log File</a>
-        </div>
+                <a href="#" onclick="downloadLogFile()" class="download-link">Download Log File</a>
+            </div>
         </form>
         <div id="exportdownloadfile">
             <?php

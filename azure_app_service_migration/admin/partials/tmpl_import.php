@@ -13,7 +13,15 @@
         </div>
       </div>
       <div style="text-align: center;">
-        <button type="button" class="btn btn-primary" id="btnImportfile" onclick="handleImport()">Import</button>
+        <div style="display: inline-block;">
+          <button type="button" class="btn btn-primary" id="btnImportfile" onclick="handleImport()">Import</button>
+        </div>        
+      </div>
+      <br>
+      <div style="text-align: center;">
+      <div id="downloadLink" style="display: none;">
+          <a href="#" onclick="downloadLogFile()" class="download-link">Download Log File</a>
+        </div>
       </div>
     </form>
     <div style="margin-top: 20px;">
@@ -278,7 +286,8 @@ function combineChunksWithRetry(
       }
     },    
     complete: function() {
-      document.getElementById('btnImportfile').disabled = false;
+      document.getElementById('btnImportfile').disabled = false;      
+      $('#downloadLink').show().css('display', 'inline-block');;
     },
   });
 }
@@ -389,4 +398,21 @@ function splitFile(file, chunkSize) {
 
   return chunks;
 }
+
+function downloadLogFile() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '<?php echo get_home_url(); ?>/wp-content/plugins/azure_app_service_migration/Logs/import_log.txt', true);
+        xhr.responseType = 'blob';
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(xhr.response);
+                link.download = 'import_log.txt';
+                link.click();
+            }
+        };
+
+        xhr.send();    
+    }
 </script>
