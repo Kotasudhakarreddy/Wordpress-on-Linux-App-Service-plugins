@@ -46,12 +46,15 @@
                     </fluent-checkbox>
                 </li>
             </ul>
-            <fluent-button class="generatefile" name="generatefile" id="generatefile" appearance="accent">
-                Generate Export File
-            </fluent-button>
+            <div>
+                <fluent-button class="generatefile" name="generatefile" id="generatefile" appearance="accent">
+                    Generate Export File
+                </fluent-button>
+            </div>
+            <br>
             <div id="downloadLink" style="display:none;">
-            <a href="#" onclick="downloadLogFile()" >Download Log File</a>
-        </div>
+                <a href="#" onclick="downloadLogFile()" class="download-link">Download Log File</a>
+            </div>
         </form>
         <div id="exportdownloadfile">
             <?php
@@ -70,6 +73,12 @@
             $src = $wp_root_url . "/wp-content/plugins/azure_app_service_migration/assets/node_modules/@fluentui/web-components/dist/web-components.js";
             ?>
             <div class="overlay"></div>
+        </div>
+        <div class="alert-container">
+            <div class="alert-box">
+                <p id="alert-message"></p>
+                <button onclick="hideAlert()">OK</button>
+            </div>
         </div>
     </div>
 </div>
@@ -114,5 +123,9 @@
         downloadLink.style.display = 'inline-block';
     }
     
-    }  
+    }
+    function hideAlert() {
+		var alertBox = document.querySelector('.alert-container');
+		alertBox.style.visibility = 'hidden';
+	}  
 </script>

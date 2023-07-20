@@ -9,21 +9,23 @@ class Azure_app_service_migration_Custom_Logger
         // Initialize log file
         $log_file = AASM_IMPORT_LOGFILE_PATH;
         $log_file_dir = dirname(AASM_IMPORT_LOGFILE_PATH);
-        if (!file_exists($log_file_dir))
-        {
+        if (!file_exists($log_file_dir)) {
             mkdir($log_file_dir, 0777, true);
         }
 
-        file_put_contents($log_file, 'Azure App Service Migration IMPORT Logs' . PHP_EOL . PHP_EOL);
+        // Create the log file if it doesn't exist
+        if (!file_exists($log_file)) {
+            file_put_contents($log_file, 'Azure App Service Migration IMPORT Logs' . PHP_EOL . PHP_EOL);
+        }
     }
 
     // Write log messages to the custom log file
     // parameters: service_type = {IMPORT/EXPORT}
     public static function writeToLog($status, $message = '', $service_type = '')
     {
+        self::init();
         // Define the log file path and name
         $log_file = AASM_IMPORT_LOGFILE_PATH;
-
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
 

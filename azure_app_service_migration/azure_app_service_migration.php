@@ -8,17 +8,17 @@
  * registers the activation and deactivation functions, and defines a function
  * that starts the plugin.
  *
- * @link              https://wordpress.org/plugins/azure-app-service-migration/
+ * @link              https://github.com/Azure/Wordpress-on-Linux-App-Service-plugins/tree/main/azure_app_service_migration
  * @since             1.0.0
  * @package           Azure_app_service_migration
  *
  * @wordpress-plugin
  * Plugin Name:       Azure App Service Migration
- * Plugin URI:        https://wordpress.org/plugins/azure-app-service-migration/
+ * Plugin URI:        https://github.com/Azure/Wordpress-on-Linux-App-Service-plugins/tree/main/azure_app_service_migration
  * Description:       Azure Migration plugin is a free tool for migrating the WordPress sites running anywhere to WordPress hosted on Azure App Service created from Azure Marketplace (Create WordPress on App Service - Microsoft Azure). The tool supports various integrations where your site content can be exported to or imported from for your migration operations. 
  * Version:           1.0.0
  * Author:            Microsoft
- * Author URI:        https://wordpress.org/plugins/azure-app-service-migration/
+ * Author URI:        https://www.microsoft.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       azure app service migration
