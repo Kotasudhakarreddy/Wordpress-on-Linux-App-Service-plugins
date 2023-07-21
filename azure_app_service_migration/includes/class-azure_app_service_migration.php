@@ -185,12 +185,7 @@ class Azure_app_service_migration
         +        * The class defining zip extractor helper functions
         +        */
         +require_once plugin_dir_path(dirname(__FILE__)) . 'utils/class-common_utils.php';
-
-        /**
-        +        * The class defining logger helper functions
-        +        */
-        +require_once plugin_dir_path(dirname(__FILE__)) . 'utils/class-logger-helper.php';
-
+        
         /**
         +        * The class defining plugin constants
         +        */

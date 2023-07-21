@@ -122,3 +122,8 @@ define( 'AASM_EXPORT_SERVICE_TYPE', 'EXPORT' );
 // ==============
 define( 'AASM_IMPORT_LOGFILE_PATH', substr(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH, 0, -1) . DIRECTORY_SEPARATOR . 'Logs' . 
                                     DIRECTORY_SEPARATOR . 'import_log.txt');
+// ==============
+// = Export Service Log file path =
+// ==============
+define( 'AASM_EXPORT_LOGFILE_PATH', substr(AZURE_APP_SERVICE_MIGRATION_PLUGIN_PATH, 0, -1) . DIRECTORY_SEPARATOR . 'Logs' . 
+                                    DIRECTORY_SEPARATOR . 'export_log.txt');
