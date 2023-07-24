@@ -35,11 +35,7 @@ class Azure_app_service_migration_Import_Database {
 		$completed = true;
 
 		// create extractor object for import zip file
-		$archive = new AASM_Zip_Extractor( $this->import_zip_path );
-
-        // Clean temporary directory to hold sql files
-        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Clearing Database files placeholder directory.', true);
-        AASM_Common_Utils::clear_directory_recursive($this->db_temp_dir);
+		$archive = new AASM_Zip_Extractor( $this->import_zip_path );        
 
         // extract database sql files into temporary directory
         $archive->extract_database_files(AASM_DATABASE_RELATIVE_PATH_IN_ZIP, $this->db_temp_dir);
@@ -57,6 +53,10 @@ class Azure_app_service_migration_Import_Database {
         if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
             $this->import_w3tc_options();
         }
+
+        // Clean temporary directory to hold sql files
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Clearing Database files placeholder directory.', true);
+        AASM_Common_Utils::clear_directory_recursive($this->db_temp_dir);
     }
 
     // Imports all sql files in wp-database/ directory inside the import zip file
