@@ -12,6 +12,7 @@
         }
     ],
     "require": {
+        "php": ">=7.4",
         "microsoft/azure-storage-blob": "*",
         "microsoft/azure-storage-table": "*",
         "microsoft/azure-storage-queue": "*",

@@ -3,7 +3,7 @@
         'name' => 'azure/azure_app_service_migration',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '4520094bd2c9ac93d1d113d90099d99b2dc385d9',
+        'reference' => '38ff763fd5e85e963fc0e12164b8ea84439cb0b8',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'azure/azure_app_service_migration' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '4520094bd2c9ac93d1d113d90099d99b2dc385d9',
+            'reference' => '38ff763fd5e85e963fc0e12164b8ea84439cb0b8',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
