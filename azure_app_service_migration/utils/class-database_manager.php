@@ -59,5 +59,82 @@ class AASM_Database_Manager {
         $query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$databaseName';";
         $result = $wpdb->get_row($query);
         return !empty($result);
+    }    
+     // Update the 'siteurl' and 'home' values in the options table of the original WordPress database
+    public function update_originaldb_data($newDatabaseName,$originalDataToUpdate )
+    {
+        $databaseConstants = $this->get_database_constants();
+        
+        $newWpDb = new wpdb($databaseConstants['DB_USER'],
+                             $databaseConstants['DB_PASSWORD'], 
+                             $newDatabaseName, 
+                             $databaseConstants['DB_HOST']);
+
+        // Extract the 'siteurl' and 'home' values from the retrieved data
+        $newSiteURL = $originalDataToUpdate['siteurl'];
+        $newHomeURL = $originalDataToUpdate['homeurl'];
+        global $table_prefix;
+        $optionsTable = $table_prefix . 'options';
+
+        // Update the 'siteurl' option in the options table with the new value
+        $siteurlUpdated = $newWpDb->update(
+                            $optionsTable,
+                            array('option_value' => $newSiteURL),
+                            array('option_name' => 'siteurl')
+                        );
+
+        // Update the 'home' option in the options table with the new value
+        $homeUpdated = $newWpDb->update(
+                        $optionsTable,
+                        array('option_value' => $newHomeURL),
+                        array('option_name' => 'home')
+                    );
+        // Return true if both 'siteurl' and 'home' were successfully updated, otherwise return false
+        return $siteurlUpdated && $homeUpdated;
     }
+
+    // Retrieve the 'siteurl' and 'home' values from the original database options table
+    public function get_originaldb_data()
+    {
+        global $wpdb;
+
+        // Query the options table to get the 'siteurl' value
+        $siteURL = $wpdb->get_var(
+            $wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s", 'siteurl')
+        );
+        // Query the options table to get the 'home' value
+        $homeURL = $wpdb->get_var(
+            $wpdb->prepare("SELECT option_value FROM $wpdb->options WHERE option_name = %s", 'home')
+        );
+        // Return the 'siteurl' and 'home' values as an associative array
+        return array('siteurl' => $siteURL, 'homeurl' => $homeURL);
+    }   
+
+      // Method to get the database constants from wp-config.php
+      public function get_database_constants() {
+        // Get the path to wp-config.php
+        $wpConfigPath = ABSPATH . 'wp-config.php';
+    
+        // Check if wp-config.php exists and is readable
+        if (!file_exists($wpConfigPath)) {
+            echo 'Error: wp-config.php not found.';
+            return array();
+        }
+    
+        // Load the wp-config.php file to access the constants directly
+        include $wpConfigPath;
+    
+        // Get the database constants
+        $dbName = defined('DB_NAME') ? DB_NAME : '';
+        $dbUser = defined('DB_USER') ? DB_USER : '';
+        $dbPassword = defined('DB_PASSWORD') ? DB_PASSWORD : '';
+        $dbHost = defined('DB_HOST') ? DB_HOST : '';
+        // Return the database constants as an associative array
+        return array(
+            'DB_NAME' => $dbName,
+            'DB_USER' => $dbUser,
+            'DB_PASSWORD' => $dbPassword,
+            'DB_HOST' => $dbHost
+        );
+    }  
 }

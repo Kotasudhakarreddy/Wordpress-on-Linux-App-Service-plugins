@@ -43,11 +43,19 @@ class Azure_app_service_migration_Import_Database {
         // create new database
         $this->database_manager->create_database($this->new_database_name);
 
+        //Retrieve the 'siteurl' and 'home' values from the original database options table
+        $originalDataToUpdate = $this->database_manager->get_originaldb_data();
+
         // Import each table sql file into the new database
         $this->import_db_sql_files();
 
         // update DB_NAME constant in wp-config
         $this->update_dbname_wp_config($this->new_database_name);
+
+        if(!$this->database_manager->update_originaldb_data($this->new_database_name, $originalDataToUpdate))
+        {
+            Azure_app_service_migration_Custom_Logger::logError(AASM_IMPORT_SERVICE_TYPE, "Couldn't update required original DB values into imported database.");
+        }
 
         // imports w3tc options from original DB to new DB
         if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
