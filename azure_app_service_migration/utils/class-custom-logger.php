@@ -4,10 +4,15 @@
 class Azure_app_service_migration_Custom_Logger
 {
     // Initialize the custom logging functionality
-    public static function init()
+    public static function init($service_type='')
     {
         // Initialize log file
-        $log_file = AASM_IMPORT_LOGFILE_PATH;
+        if ($service_type === AASM_IMPORT_SERVICE_TYPE) {
+            $log_file = AASM_IMPORT_LOGFILE_PATH;
+        } else {
+            $log_file = AASM_EXPORT_LOGFILE_PATH;
+        }
+        //$log_file = AASM_IMPORT_LOGFILE_PATH;
         $log_file_dir = dirname(AASM_IMPORT_LOGFILE_PATH);
         if (!file_exists($log_file_dir)) {
             mkdir($log_file_dir, 0777, true);
@@ -23,9 +28,12 @@ class Azure_app_service_migration_Custom_Logger
     // parameters: service_type = {IMPORT/EXPORT}
     public static function writeToLog($status, $message = '', $service_type = '')
     {
-        self::init();
-        // Define the log file path and name
-        $log_file = AASM_IMPORT_LOGFILE_PATH;
+        self::init($service_type);
+        if ($service_type === AASM_IMPORT_SERVICE_TYPE) {
+            $log_file = AASM_IMPORT_LOGFILE_PATH;
+        } else {
+            $log_file = AASM_EXPORT_LOGFILE_PATH;
+        }  
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
 
@@ -43,7 +51,7 @@ class Azure_app_service_migration_Custom_Logger
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
         $info_message = "AASM_LOG: [{$current_time}]: {$service_type} {$message}";
-        self::writeToLog($info_message);
+        self::writeToLog('Information',$info_message, $service_type);
     }
 
     public static function logError($service_type, $message, $echo_status = true)
@@ -51,7 +59,7 @@ class Azure_app_service_migration_Custom_Logger
         // Get the current date and time
         $current_time = date('Y-m-d H:i:s');
         $error_message = "AASM_ERROR: [{$current_time}]: {$service_type} {$message}";
-        self::writeToLog($error_message);
+        self::writeToLog('error', $error_message, $service_type);
 
         // echo status to return to server
         if ($echo_status) {
@@ -102,6 +110,19 @@ class Azure_app_service_migration_Custom_Logger
     public static function update_migration_status($data)
     {
         update_option( AASM_MIGRATION_STATUS, $data );
+    }
+
+    public static function delete_log_file($service_type)
+    {
+         // Initialize log file
+         if ($service_type === AASM_IMPORT_SERVICE_TYPE) {
+            $log_file = AASM_IMPORT_LOGFILE_PATH;
+        } else {
+            $log_file = AASM_EXPORT_LOGFILE_PATH;
+        }
+        if (file_exists($log_file)) {
+            unlink($log_file);
+        }
     }
 }
 
