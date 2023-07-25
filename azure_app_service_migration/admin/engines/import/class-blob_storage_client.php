@@ -22,7 +22,7 @@ class AASM_Blob_Storage_Client {
 
         // TO DO: Include Blob storage library for exceptions and add exception handling here 
         try {
-            $blob_storage_client->createBlockBlob($blob_container, $blob_name, $file_path);
+            $this->blob_storage_client->createBlockBlob($blob_container, $blob_name, $file_path);
         } catch( Exception $ex) {
             Azure_app_service_migration_Custom_Logger::handleException($ex, false);
         }

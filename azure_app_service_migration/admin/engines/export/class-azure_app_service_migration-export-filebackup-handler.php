@@ -1,4 +1,3 @@
-
 <?php
 class Azure_app_service_migration_Export_FileBackupHandler
 {
