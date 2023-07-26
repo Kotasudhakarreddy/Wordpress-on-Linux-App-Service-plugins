@@ -54,7 +54,7 @@ class AASM_Blob_Storage_Client {
         if (is_null($cdn_engine) 
             || is_null($storage_account) 
             || is_null($storage_account_key) 
-            || is_null($storage_account_container) 
+            || is_null($blob_container) 
             || $cdn_engine != "azure")
         {
             Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Failed to retrieve Azure Blob Storage Settings.', true);
