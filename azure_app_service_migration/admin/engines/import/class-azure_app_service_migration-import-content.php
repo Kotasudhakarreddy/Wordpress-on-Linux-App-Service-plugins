@@ -102,7 +102,13 @@ class Azure_app_service_migration_Import_Content {
 
                 Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Uploading media files and uploads to Azure Blob Storage.', true);
 
-                $zip = zip_open($this->import_zip_path);
+                // Open Import zip file
+                try {
+                    $zip = zip_open($this->import_zip_path);
+                } catch ( Exception $ex ) {
+                    Azure_app_service_migration_Custom_Logger::handleException($ex);
+                }
+
                 while ($zip_entry = zip_read($zip)) {
                     $filename = AASM_Common_Utils::replace_forward_slash_with_directory_separator(zip_entry_name($zip_entry));
 
@@ -119,6 +125,9 @@ class Azure_app_service_migration_Import_Content {
                         $blob_storage_client->upload_file($absolutePath, $blob_storage_settings['blob_container']);
                     }
                 }
+
+                zip_close($zip);
+                
             } catch(Exception $ex) {
                 Azure_app_service_migration_Custom_Logger::handleException($ex);
             }
