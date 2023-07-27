@@ -35,7 +35,7 @@ class Azure_app_service_migration_Import_Content {
         );
 
         // exclude extracting to w3 total cache plugin if retain AFD/CDN/BlobStorage enabled
-        if ( isset( $this->params['retain_w3tc_config'] ) && $this->params['retain_w3tc_config'] === true ) {
+        if ( isset( $this->params['retain_w3tc_config'] ) && strtoupper($this->params['retain_w3tc_config']) == "TRUE") {
 			$files_to_exclude = array_merge(
                 $files_to_exclude,
                 array(
@@ -60,7 +60,7 @@ class Azure_app_service_migration_Import_Content {
         $this->upload_to_blob_storage($this->params);
 
         // delete cache files produced by w3tc plugin
-        if ( isset( $this->params['retain_w3tc_config'] ) && $this->params['retain_w3tc_config'] === true ) {
+        if ( isset( $this->params['retain_w3tc_config'] ) && strtoupper($this->params['retain_w3tc_config']) == "TRUE") {
             Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Refreshing W3 Total Cache files.', true);
             $this->delete_w3tc_cache_files();
         }
@@ -86,7 +86,7 @@ class Azure_app_service_migration_Import_Content {
             return; // Return early if import zip file doesn't exist
         }
 
-        if (isset($params['retain_w3tc_config']) && $params['retain_w3tc_config'] === true) {
+        if (isset($params['retain_w3tc_config']) && strtoupper($this->params['retain_w3tc_config']) == "TRUE") {
             try {
                 Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Setting up Azure Blob Storage.', true);
 
