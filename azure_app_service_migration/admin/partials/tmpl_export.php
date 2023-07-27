@@ -5,7 +5,7 @@
         </div>
         <form id="frm-chkbox-data">
             <ul>
-                <li>
+                <li id="prtbkuppwd">
                     <fluent-checkbox value="true" class="exportdata" name="exportdata[]" id="prtbkuppwd">
                         Protect this backup with a password
                     </fluent-checkbox>

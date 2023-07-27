@@ -126,3 +126,8 @@ body.loading .overlay{
     border-radius: 4px;
     cursor: pointer;
   }
+  
+  #prtbkuppwd {
+    display: none;
+  }
+  
