@@ -17,8 +17,5 @@
         "microsoft/azure-storage-table": "*",
         "microsoft/azure-storage-queue": "*",
         "microsoft/azure-storage-file": "*"
-    },
-    "config": {
-        "platform-check": false
     }
 }
