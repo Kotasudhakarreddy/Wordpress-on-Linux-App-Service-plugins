@@ -65,6 +65,8 @@ class Azure_app_service_migration_Import_Database {
         // Clean temporary directory to hold sql files
         Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Clearing Database files placeholder directory.', true);
         AASM_Common_Utils::clear_directory_recursive($this->db_temp_dir);
+
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Database import complete.', true);
     }
 
     // Imports all sql files in wp-database/ directory inside the import zip file
