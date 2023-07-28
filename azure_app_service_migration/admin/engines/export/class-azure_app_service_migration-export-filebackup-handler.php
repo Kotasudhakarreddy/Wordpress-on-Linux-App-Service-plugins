@@ -190,48 +190,45 @@ class Azure_app_service_migration_Export_FileBackupHandler
     }
     private function exportTableRecords($wpdb, $tableName, $zip, $wpDBFolderNameInZip, $password, $dontexptpostrevisions)
     {
-        $batchSize = 1000;
-        $offset = 0;
-        $batchNumber = 1;
         try {
-            Azure_app_service_migration_Custom_Logger::logInfo(AASM_EXPORT_SERVICE_TYPE, 'Exporting Records for table : ' . $tableName . '-started');            do {
-                if ($dontexptpostrevisions && $tableName == 'wp_posts') {
-                    $recordsQuery = "SELECT * FROM {$tableName} WHERE post_type != 'revision' LIMIT {$offset}, {$batchSize}";
-                } else {
-                    $recordsQuery = "SELECT * FROM {$tableName} LIMIT {$offset}, {$batchSize}";
+            Azure_app_service_migration_Custom_Logger::logInfo(AASM_EXPORT_SERVICE_TYPE, 'Exporting Records for table: ' . $tableName . ' - started');
+    
+            // Fetch all records from the table in one query
+            if ($dontexptpostrevisions && $tableName == 'wp_posts') {
+                $recordsQuery = "SELECT * FROM {$tableName} WHERE post_type != 'revision'";
+            } else {
+                $recordsQuery = "SELECT * FROM {$tableName}";
+            }
+            $records = $wpdb->get_results($recordsQuery, ARRAY_A);
+    
+            if (!empty($records)) {
+                $recordsContent = "";
+    
+                foreach ($records as $record) {
+                    $recordValues = [];
+    
+                    foreach ($record as $value) {
+                        $recordValues[] = $this->formatRecordValue($value);
+                    }
+    
+                    $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");\n";
                 }
-
-                $records = $wpdb->get_results($recordsQuery, ARRAY_A);
-                $recordsFilename = "{$tableName}_records_batch{$batchNumber}.sql";
-
-                if (!empty($records)) {
-                    $recordsContent = "";
-
-                    foreach ($records as $record) {
-                        $recordValues = [];
-
-                        foreach ($record as $value) {
-                            $recordValues[] = $this->formatRecordValue($value);
-                        }
-
-                        $recordsContent .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $recordValues) . ");\n";
-                    }
-
-                    if ($batchNumber === 1) {
-                        $zip->addFromString($wpDBFolderNameInZip . $tableName . ".sql", $recordsContent);
-                    } else {
-                        $zip->appendFromString($wpDBFolderNameInZip . $tableName . ".sql", $recordsContent);
-                    }
-
-                    if ($password !== '') {
-                        $zip->setEncryptionName($wpDBFolderNameInZip . $tableName . ".sql", ZipArchive::EM_AES_256, $password);
-                    }
+    
+                if (!$zip instanceof ZipArchive) {
+                    throw new Exception('Invalid ZipArchive object provided.');
                 }
-
-                $offset += $batchSize;
-                $batchNumber++;
-            } while (!empty($records));
-
+    
+                // If the table data is too large, you might want to consider writing the data to a temporary file instead of storing it in memory.
+    
+                // Add the records content to the ZIP archive
+                $filenameInZip = $wpDBFolderNameInZip . $tableName . ".sql";
+                $zip->addFromString($filenameInZip, $recordsContent);
+    
+                if ($password !== '') {
+                    $zip->setEncryptionName($filenameInZip, ZipArchive::EM_AES_256, $password);
+                }
+            }
+    
             Azure_app_service_migration_Custom_Logger::logInfo(AASM_EXPORT_SERVICE_TYPE, 'Exporting Records for table: ' . $tableName . ' - completed');
         } catch (Exception $e) {
             Azure_app_service_migration_Custom_Logger::logError(AASM_EXPORT_SERVICE_TYPE, 'Table records export exception: ' . $e->getMessage());
