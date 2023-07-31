@@ -264,8 +264,8 @@ function combineChunksWithRetry(
     },
     error: function (xhr, status, error) {
       console.log(error);
-      fileInfo.textContent = 'Failed to import file.';
-
+      fileInfo.textContent = 'Import exited. Check Import Log File for completion...';
+      /*
       if (retries < maxRetries) {
         retries++;
         setTimeout(function () {
@@ -284,7 +284,7 @@ function combineChunksWithRetry(
           'Failed to import file after multiple retries.';
         document.getElementById('progressBarContainer').style.display = 'none'; // Hide the progress bar
         deleteChunks(); // Delete the chunk files
-      }
+      }*/
     },    
     complete: function() {
       document.getElementById('btnImportfile').disabled = false;      
