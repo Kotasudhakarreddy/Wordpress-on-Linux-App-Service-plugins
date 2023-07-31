@@ -89,6 +89,15 @@ define( 'AASM_W3TC_OBJECT_CACHE_PATH', 'wp-content' . DIRECTORY_SEPARATOR .
 // ================
 define( 'AASM_W3TC_DB_PATH', 'wp-content' . DIRECTORY_SEPARATOR . 
                                 'db.php');
+                                
+
+// ================
+// = W3TC plugin file path =
+// ================
+define( 'AASM_W3TC_PLUGIN_FILE_PATH', ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 
+                                    'plugins' . DIRECTORY_SEPARATOR .
+                                    'w3-total-cache' . DIRECTORY_SEPARATOR . 
+                                    'w3-total-cache.php');
 
 // ================
 // = W3TC config master file path =
