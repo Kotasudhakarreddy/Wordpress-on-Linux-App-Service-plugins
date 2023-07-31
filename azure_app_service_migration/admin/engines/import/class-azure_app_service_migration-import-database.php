@@ -58,8 +58,8 @@ class Azure_app_service_migration_Import_Database {
         }
 
         // imports w3tc options from original DB to new DB
-        if ( isset( $params['retain_w3tc_config'] ) && $params['retain_w3tc_config'] === true ) {
-            $this->import_w3tc_options();
+        if ( isset( $this->params['retain_w3tc_config'] ) && strtoupper($this->params['retain_w3tc_config']) == "TRUE" ) {
+            $this->activate_w3tc_plugin();
         }
 
         // Clean temporary directory to hold sql files
@@ -109,28 +109,23 @@ class Azure_app_service_migration_Import_Database {
         }
     }
 
-    // Imports W3 Total Cache settings in wp_options table in database
-    private function import_w3tc_options() {
-        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Importing W3 Total Cache options to the new database.', true);
+    // Activates W3 Total Cache plugin
+    private function activate_w3tc_plugin() {
+        Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Activating W3 Total Cache Plugin.', true);
 
-        $sourceDatabase = $this->old_database_name;
-        $destinationDatabase = $this->new_database_name;
+        $plugin_to_activate = AASM_W3TC_PLUGIN_FILE_PATH;
 
-        $sqlResult = $this->database_manager->run_query("SELECT option_id, option_name, option_value, autoload FROM $sourceDatabase.wp_options WHERE option_name LIKE '%w3tc%'");
-
-        // Iterate over the result rows
-        foreach ($sqlResult as $row) {
-            $option_id = addslashes($row->option_id);
-            $option_name = addslashes($row->option_name);
-            $option_value = addslashes($row->option_value);
-            $autoload = addslashes($row->autoload);
-
-            // Update option in current database
-            try {
-                update_option($option_name, $option_value);
-            } catch( Exception $ex) {
-                Azure_app_service_migration_Custom_Logger::handleException($ex);
-            }
+        // Check if the plugin is already active.
+        if (is_plugin_active($plugin_to_activate)) {
+            return;
+        }
+    
+        // Activate the plugin.
+        $activate = activate_plugin($plugin_to_activate);
+    
+        // Check if the activation was successful.
+        if (is_wp_error($activate)) {
+            Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Could not activate W3 Total Cache plugin.', true);
         }
     }
 
