@@ -103,6 +103,7 @@ class Azure_app_service_migration_Import_Database {
         Azure_app_service_migration_Custom_Logger::logInfo(AASM_IMPORT_SERVICE_TYPE, 'Finished importing Database tables. Importing database records...', true);
         // Import table records
         foreach ($table_records_files as $table_records) {
+            set_time_limit(0);
             if (!$this->database_manager->import_sql_file($this->new_database_name, $table_records)) {
                 Azure_app_service_migration_Custom_Logger::logError(AASM_IMPORT_SERVICE_TYPE, "Couldn't import " . $table_records . " into database.");
             }
